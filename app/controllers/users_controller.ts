@@ -10,7 +10,7 @@ import type { HttpContext } from '@adonisjs/core/http';
 @inject()
 export default class UsersController {
   constructor(private userService: UserService) {}
-  //TODO: Add tests for UsersController to achieve 100% coverage and check edge cases. Needs to be cheked if email uniqueness is handled properly. Also verify that error handling works as expected (error responses should use class ResponseErrorHandler).
+
   async store({ request, response }: HttpContext) {
     const validatedUserData: UserCreateDto = await request.validateUsing(createUserValidator);
     try {
