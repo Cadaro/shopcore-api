@@ -1,11 +1,11 @@
 import User from '#models/user';
-import { UserData, UserDb } from '#types/user';
+import { UserCreatedDto, UserCreateDto, UserData, UserDb } from '#types/user';
 import db from '@adonisjs/lucid/services/db';
 import { randomUUID } from 'crypto';
 
 export default class UserService {
-  async createUser(userData: UserDb) {
-    const user: UserData = await db.transaction(async (trx) => {
+  async createUser(userData: UserCreateDto): Promise<UserCreatedDto> {
+    const user: UserDb = await db.transaction(async (trx) => {
       const exists = await User.findBy({ email: userData.email }, { client: trx });
       if (exists) {
         throw new Error(`Email ${userData.email} already exists`);
@@ -18,12 +18,12 @@ export default class UserService {
       if (!createdUser) {
         throw new Error(`Cannot create user account for ${userData.email}`);
       }
-      return createdUser.serialize() as UserData;
+      return createdUser;
     });
-    return { userId: user.userId };
+    return { userId: user.uuid };
   }
 
-  async updateUser(userData: Partial<UserData>) {
+  async updateUser(userData: Partial<UserData>): Promise<void> {
     await db.transaction(async (trx) => {
       const user = await User.findBy({ uuid: userData.userId }, { client: trx });
       if (!user) {
@@ -33,12 +33,21 @@ export default class UserService {
     });
   }
 
-  async fetchUserData(uuid: string) {
-    const userData = await User.findBy({ uuid });
-    if (!userData) {
+  async fetchUserData(uuid: string): Promise<UserData> {
+    const user = await User.findBy({ uuid });
+    if (!user) {
       throw new Error(`User ${uuid} not found`);
     }
 
-    return userData.serialize() as UserData;
+    const userData: UserData = {
+      userId: user.uuid,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+
+    return userData;
   }
 }

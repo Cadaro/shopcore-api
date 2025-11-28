@@ -1,11 +1,11 @@
 import InvoiceCustomers from '#models/invoice_customer';
 import User from '#models/user';
 import TokenService from '#services/token_service';
-import { CountryCode } from '#types/countryCode';
+import { generateRoleUser } from '#tests/data/users/roleUser';
+import { CreateUser } from '#tests/data/users/user';
+import { CountryCode } from '#types/enum/countryCode';
 import { InvoiceCustomerData, InvoiceCustomerTypeEnum } from '#types/invoice';
-import { UserRolesEnum } from '#types/user';
 import { test } from '@japa/runner';
-import { randomUUID } from 'crypto';
 
 test.group('Customers invoice data update', (group) => {
   let userWithPersonData: User;
@@ -36,17 +36,8 @@ test.group('Customers invoice data update', (group) => {
   };
 
   group.setup(async () => {
-    function createUser(): Promise<User> {
-      return User.create({
-        email: `user${randomUUID()}@example.com`,
-        password: 'user123',
-        role: UserRolesEnum.USER,
-        uuid: randomUUID(),
-      });
-    }
-
     // Create first user with person invoice data
-    userWithPersonData = await createUser();
+    userWithPersonData = await new CreateUser(generateRoleUser()).create();
     await InvoiceCustomers.create({
       userId: userWithPersonData.uuid,
       customerType: invoicePersonCustomerData.customerType,
@@ -60,7 +51,7 @@ test.group('Customers invoice data update', (group) => {
     });
 
     // Create second user with company invoice data
-    userWithCompanyData = await createUser();
+    userWithCompanyData = await new CreateUser(generateRoleUser()).create();
     await InvoiceCustomers.create({
       userId: userWithCompanyData.uuid,
       customerType: invoiceCompanyCustomerData.customerType,

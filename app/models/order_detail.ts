@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import { BaseModel, column } from '@adonisjs/lucid/orm';
-import { Currency } from '#types/order';
+import { Currency } from '#types/enum/currencyCode';
 
 export default class OrderDetail extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })

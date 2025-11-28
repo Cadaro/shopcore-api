@@ -31,7 +31,8 @@
     "#tests/*": "./tests/*.js",
     "#config/*": "./config/*.js",
     "#types/*": "./app/types/*.js",
-    "#mappers/*": "./app/mappers/*.js"
+    "#mappers/*": "./app/mappers/*.js",
+    "#validatorTypes/*": "./app/validators/validatorTypes/*.js"
   },
   "devDependencies": {
     "@adonisjs/assembler": "^7.7.0",

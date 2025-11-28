@@ -9,7 +9,7 @@ export default class InvoiceCustomerMapper {
   mapInvoiceCustomerModelToInvoiceCustomerType(
     invoiceCustomersModel: InvoiceCustomers
   ): InvoiceCustomerData {
-    const result: Partial<InvoiceCustomerData> = {
+    const result: InvoiceCustomerData = {
       customerType: invoiceCustomersModel.customerType,
       address: {
         city: invoiceCustomersModel.city,
@@ -44,11 +44,11 @@ export default class InvoiceCustomerMapper {
       result.lastName = invoiceCustomersModel.lastName;
     }
 
-    if (invoiceCustomersModel.apartmentNumber !== null) {
+    if (invoiceCustomersModel.apartmentNumber) {
       result.address!.apartmentNumber = invoiceCustomersModel.apartmentNumber;
     }
 
-    if (invoiceCustomersModel.region !== null) {
+    if (invoiceCustomersModel.region) {
       result.address!.region = invoiceCustomersModel.region;
     }
 
@@ -57,7 +57,7 @@ export default class InvoiceCustomerMapper {
   mapInvoiceCustomerTypeToInvoiceCustomerModel(
     invoiceCustomerData: InvoiceCustomerWithUserId
   ): Partial<InvoiceCustomers> {
-    const result: any = {
+    const result: Partial<InvoiceCustomers> = {
       userId: invoiceCustomerData.userId,
       firstName: invoiceCustomerData.firstName,
       lastName: invoiceCustomerData.lastName,
@@ -66,8 +66,8 @@ export default class InvoiceCustomerMapper {
       city: invoiceCustomerData.address!.city,
       streetName: invoiceCustomerData.address!.streetName,
       streetNumber: invoiceCustomerData.address!.streetNumber,
-      apartmentNumber: invoiceCustomerData.address?.apartmentNumber ?? null,
-      region: invoiceCustomerData.address?.region ?? null,
+      apartmentNumber: invoiceCustomerData.address?.apartmentNumber ?? '',
+      region: invoiceCustomerData.address?.region ?? '',
       countryCode: invoiceCustomerData.address!.countryCode,
       postalCode: invoiceCustomerData.address!.postalCode,
       customerType: invoiceCustomerData.customerType,

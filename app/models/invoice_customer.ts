@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import { BaseModel, column } from '@adonisjs/lucid/orm';
-import { CountryCode } from '#types/countryCode';
+import { CountryCode } from '#types/enum/countryCode';
 import { InvoiceCustomerTypeEnum } from '#types/invoice';
 
 export default class InvoiceCustomers extends BaseModel {

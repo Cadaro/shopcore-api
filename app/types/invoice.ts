@@ -1,4 +1,4 @@
-import { Currency } from '#types/order';
+import { Currency } from '#types/enum/currencyCode';
 import { Address } from '#types/address';
 
 /*
@@ -27,7 +27,7 @@ export type InvoiceCustomerBasic = {
  * Combines basic customer information with address details
  * address - customer's address details
  */
-export type InvoiceCustomerData = Partial<InvoiceCustomerBasic> & { address: Address };
+export type InvoiceCustomerData = InvoiceCustomerBasic & { address: Address };
 
 /** Invoice customer data structure including userId
  * userId - associated user ID
@@ -66,6 +66,7 @@ export type InvoiceItem = {
  */
 type InvoiceData = {
   orderId: string;
+  userId: string;
   items: Array<InvoiceItem>;
   customer: InvoiceCustomerData;
 };

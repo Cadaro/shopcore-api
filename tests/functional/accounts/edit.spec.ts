@@ -1,4 +1,4 @@
-import { CountryCode } from '#types/countryCode';
+import { CountryCode } from '#types/enum/countryCode';
 import { Token } from '#types/token';
 import { Address } from '#types/address';
 import { test } from '@japa/runner';

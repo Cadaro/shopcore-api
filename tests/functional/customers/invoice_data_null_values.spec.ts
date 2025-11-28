@@ -1,22 +1,17 @@
 import InvoiceCustomers from '#models/invoice_customer';
 import User from '#models/user';
 import TokenService from '#services/token_service';
-import { CountryCode } from '#types/countryCode';
+import { generateRoleUser } from '#tests/data/users/roleUser';
+import { CreateUser } from '#tests/data/users/user';
+import { CountryCode } from '#types/enum/countryCode';
 import { InvoiceCustomerData, InvoiceCustomerTypeEnum } from '#types/invoice';
-import { UserRolesEnum } from '#types/user';
 import { test } from '@japa/runner';
-import { randomUUID } from 'crypto';
 
 test.group('Customers invoice data null values handling', (group) => {
   let user: User;
 
   group.setup(async () => {
-    user = await User.create({
-      email: `user${randomUUID()}@example.com`,
-      password: 'user123',
-      role: UserRolesEnum.USER,
-      uuid: randomUUID(),
-    });
+    user = await new CreateUser(generateRoleUser()).create();
 
     // Create initial invoice data with optional fields
     await InvoiceCustomers.create({
@@ -76,7 +71,7 @@ test.group('Customers invoice data null values handling', (group) => {
       .bearerToken(token.token);
 
     updatedResponse.assertStatus(200);
-    const updatedData = updatedResponse.body();
+    const updatedData: InvoiceCustomerData = updatedResponse.body();
 
     // Optional fields should not be present in the response when they are null
     assert.isUndefined(updatedData.address.apartmentNumber);
@@ -84,8 +79,8 @@ test.group('Customers invoice data null values handling', (group) => {
 
     // Verify in database that the fields are actually null
     const dbRecord = await InvoiceCustomers.findBy('userId', user.uuid);
-    assert.isNull(dbRecord!.apartmentNumber);
-    assert.isNull(dbRecord!.region);
+    assert.isEmpty(dbRecord!.apartmentNumber);
+    assert.isEmpty(dbRecord!.region);
   });
 
   test('should preserve optional fields when provided in update', async ({ client, assert }) => {
