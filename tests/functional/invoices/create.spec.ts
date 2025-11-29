@@ -1,9 +1,19 @@
 import SaveInvoice from '#services/save_invoice_service';
 import OrderService from '#services/order_service';
-import { CountryCode } from '#types/countryCode';
-import { InvoiceItem, InvoiceNumberOptions, OrderInvoiceData } from '#types/invoice';
-import { Currency, OrderSku } from '#types/order';
+import { CountryCode } from '#types/enum/countryCode';
+import {
+  InvoiceCustomerTypeEnum,
+  InvoiceItem,
+  InvoiceNumberOptions,
+  OrderInvoiceData,
+} from '#types/invoice';
+import { OrderCreateRequestDto, OrderSkuDto } from '#types/order';
+import { Currency } from '#types/enum/currencyCode';
 import { test } from '@japa/runner';
+import { DeliveryMethod } from '#types/enum/deliveryMethod';
+import { PaymentMethod } from '#types/enum/paymentMethod';
+import User from '#models/user';
+import { randomUUID } from 'crypto';
 
 test.group('Invoices create', (group) => {
   const orderService = new OrderService();
@@ -22,7 +32,7 @@ test.group('Invoices create', (group) => {
         vatRate: 0.23,
       },
     ];
-    const items: Array<OrderSku> = [];
+    const items: Array<OrderSkuDto> = [];
     invoiceItems.forEach((item) => {
       items.push({
         itemId: item.itemId,
@@ -34,14 +44,56 @@ test.group('Invoices create', (group) => {
         vatRate: item.vatRate,
       });
     });
-    const firstOrder = await orderService.createOrder(items, 1);
-    const secondOrder = await orderService.createOrder(items, 1);
+    const firstOrderReq: OrderCreateRequestDto = {
+      firstName: 'Test Name',
+      lastName: 'Test last Name',
+      email: 'test@example.com',
+      phoneNumber: '123456789',
+      paymentMethod: PaymentMethod.BANK_TRANSFER,
+      delivery: {
+        method: DeliveryMethod.PICKUP_POINT,
+        pickupPointId: 'pickup-123',
+        courier: 'GLOBAL COURIER',
+        deliveryCurrency: Currency.PLN,
+        deliveryPrice: 12.99,
+        deliveryVatRate: 0.23,
+      },
+      items: items,
+    };
+    const secondOrderReq: OrderCreateRequestDto = {
+      firstName: 'Test Name',
+      lastName: 'Test last Name',
+      email: 'test@example.com',
+      phoneNumber: '123456789',
+      paymentMethod: PaymentMethod.BANK_TRANSFER,
+      delivery: {
+        method: DeliveryMethod.PICKUP_POINT,
+        pickupPointId: 'pickup-123',
+        courier: 'GLOBAL COURIER',
+        deliveryCurrency: Currency.PLN,
+        deliveryPrice: 12.99,
+        deliveryVatRate: 0.23,
+      },
+      items: items,
+    };
+    const createUser = (): Promise<User> => {
+      return User.create({
+        email: `${randomUUID()}@example.com`,
+        password: 'Test123',
+        uuid: randomUUID(),
+      });
+    };
+    const user = await createUser();
+    const firstOrder = await orderService.createOrder(firstOrderReq, user.uuid);
+    const secondOrder = await orderService.createOrder(secondOrderReq, user.uuid);
     invoicePersonData = {
       orderId: firstOrder.orderId,
+      userId: user.uuid,
       items: invoiceItems,
       customer: {
         firstName: 'Test Name',
         lastName: 'Test last Name',
+        customerType: InvoiceCustomerTypeEnum.PERSON,
         address: {
           city: 'Test city',
           countryCode: CountryCode.PL,
@@ -53,10 +105,12 @@ test.group('Invoices create', (group) => {
     };
     invoiceCompanyData = {
       orderId: secondOrder.orderId,
+      userId: user.uuid,
       items: invoiceItems,
       customer: {
         companyName: 'Test Company',
         taxId: '123-456-32-18',
+        customerType: InvoiceCustomerTypeEnum.COMPANY,
         address: {
           city: 'Test city',
           countryCode: CountryCode.PL,
@@ -66,23 +120,6 @@ test.group('Invoices create', (group) => {
         },
       },
     };
-  });
-
-  group.each.setup(async () => {
-    const orderService = new (await import('#services/order_service')).default();
-    const items: Array<OrderSku> = [];
-    invoicePersonData.items.forEach((item) => {
-      items.push({
-        itemId: item.itemId,
-        itemName: item.itemName,
-        currency: item.priceCurrency,
-        itemPrice: item.priceGross,
-        qty: item.qty,
-        vatAmount: item.vatAmount,
-        vatRate: item.vatRate,
-      });
-    });
-    await orderService.createOrder(items, 1);
   });
 
   test('create invoice order for type person with invoice number options, with month', async ({
@@ -96,7 +133,8 @@ test.group('Invoices create', (group) => {
 
     const saveInvoiceService = new SaveInvoice();
     const result = await saveInvoiceService.save(invoicePersonData, invoiceNumberOptions);
-    assert.match(result, /^(FV) (0*[1-9]\d{0,3})\/(0?[1-9]|1[0-2])\/\d{4}$/);
+    const invoiceNumberRegex = /^(FV) (0*[1-9]\d{0,3})\/(0?[1-9]|1[0-2])\/\d{4}$/;
+    assert.match(result, invoiceNumberRegex);
   });
 
   test('create invoice order for type person with invoice number options, without month', async ({
@@ -110,7 +148,8 @@ test.group('Invoices create', (group) => {
 
     const saveInvoiceService = new SaveInvoice();
     const result = await saveInvoiceService.save(invoicePersonData, invoiceNumberOptions);
-    assert.match(result, /^(FV) (0*[1-9]\d{0,3})\/\d{4}$/);
+    const invoiceNumberRegex = /^(FV) (0*[1-9]\d{0,3})\/\d{4}$/;
+    assert.match(result, invoiceNumberRegex);
   });
 
   test('create invoice order for type person without invoice number options', async ({
@@ -118,7 +157,8 @@ test.group('Invoices create', (group) => {
   }) => {
     const saveInvoiceService = new SaveInvoice();
     const result = await saveInvoiceService.save(invoicePersonData);
-    assert.match(result, /^(INV) (0*[1-9]\d{0,3})\/(0?[1-9]|1[0-2])\/\d{4}$/);
+    const invoiceNumberRegex = /^(INV) (0*[1-9]\d{0,3})\/(0?[1-9]|1[0-2])\/\d{4}$/;
+    assert.match(result, invoiceNumberRegex);
   });
 
   test('create invoice order for type company without invoice number options', async ({
@@ -126,6 +166,7 @@ test.group('Invoices create', (group) => {
   }) => {
     const saveInvoiceService = new SaveInvoice();
     const result = await saveInvoiceService.save(invoiceCompanyData);
-    assert.match(result, /^(INV) (0*[1-9]\d{0,3})\/(0?[1-9]|1[0-2])\/\d{4}$/);
+    const invoiceNumberRegex = /^(INV) (0*[1-9]\d{0,3})\/(0?[1-9]|1[0-2])\/\d{4}$/;
+    assert.match(result, invoiceNumberRegex);
   });
 });

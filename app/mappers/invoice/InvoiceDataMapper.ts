@@ -1,5 +1,5 @@
 import { InvoiceItem, OrderInvoiceData } from '#types/invoice';
-import { OrderSku } from '#types/order';
+import { OrderSkuDto } from '#types/order';
 
 export default class InvoiceDataMapper {
   mapInvoiceHead(invoiceData: OrderInvoiceData, invoiceId: string) {
@@ -25,7 +25,7 @@ export default class InvoiceDataMapper {
     };
   }
 
-  mapInvoiceDetails(orderDetails: Array<OrderSku>) {
+  mapInvoiceDetails(orderDetails: Array<OrderSkuDto>) {
     const invoiceItems: Array<InvoiceItem> = [];
     orderDetails.forEach((item) => {
       invoiceItems.push({

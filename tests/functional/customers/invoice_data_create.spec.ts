@@ -1,28 +1,19 @@
 import InvoiceCustomers from '#models/invoice_customer';
-import User from '#models/user';
 import TokenService from '#services/token_service';
-import { CountryCode } from '#types/countryCode';
+import { generateRoleUser } from '#tests/data/users/roleUser';
+import { CreateUser } from '#tests/data/users/user';
+import { CountryCode } from '#types/enum/countryCode';
 import {
   InvoiceCustomerData,
   InvoiceCustomerTypeEnum,
   InvoiceCustomerWithUserId,
 } from '#types/invoice';
-import { UserRolesEnum } from '#types/user';
 import { test } from '@japa/runner';
 import { randomUUID } from 'crypto';
 
 test.group('Customers invoice create', () => {
-  function createUser(): Promise<User> {
-    return User.create({
-      email: `user${randomUUID()}@example.com`,
-      password: 'user123',
-      role: UserRolesEnum.USER,
-      uuid: randomUUID(),
-    });
-  }
-
   test('create invoice data for customer of type person', async ({ client }) => {
-    const user = await createUser();
+    const user = await new CreateUser(generateRoleUser()).create();
     const invoiceCustomerData: InvoiceCustomerData = {
       customerType: InvoiceCustomerTypeEnum.PERSON,
       firstName: 'John',
@@ -49,7 +40,7 @@ test.group('Customers invoice create', () => {
   });
 
   test('create invoice data for customer of type company', async ({ client }) => {
-    const user = await createUser();
+    const user = await new CreateUser(generateRoleUser()).create();
     const invoiceCustomerData: InvoiceCustomerData = {
       customerType: InvoiceCustomerTypeEnum.COMPANY,
       companyName: 'Acme Corp',
@@ -78,7 +69,7 @@ test.group('Customers invoice create', () => {
   test('create invoice data for customer of type company with missing tax ID and company name', async ({
     client,
   }) => {
-    const user = await createUser();
+    const user = await new CreateUser(generateRoleUser()).create();
     const invoiceCustomerData: InvoiceCustomerData = {
       customerType: InvoiceCustomerTypeEnum.COMPANY,
       firstName: 'John',
@@ -106,7 +97,7 @@ test.group('Customers invoice create', () => {
   test('create invoice data for customer of type person with incorrect postal code', async ({
     client,
   }) => {
-    const user = await createUser();
+    const user = await new CreateUser(generateRoleUser()).create();
     const invoiceCustomerData: InvoiceCustomerData = {
       customerType: InvoiceCustomerTypeEnum.PERSON,
       firstName: 'John',

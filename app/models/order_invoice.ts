@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm';
-import { CountryCode } from '#types/countryCode';
+import { CountryCode } from '#types/enum/countryCode';
 import type { HasMany } from '@adonisjs/lucid/types/relations';
 import OrderInvoiceDetail from './order_invoice_detail.js';
 import { InvoiceCustomerTypeEnum } from '#types/invoice';
