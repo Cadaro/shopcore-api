@@ -1,4 +1,4 @@
-import { Currency } from '#types/order';
+import { Currency } from '#types/enum/currencyCode';
 import vine from '@vinejs/vine';
 
 export const createStockValidator = vine.compile(

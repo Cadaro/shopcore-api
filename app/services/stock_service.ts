@@ -1,9 +1,17 @@
+import StockDataMapper from '#mappers/stock/StockDataMapper';
 import Stock from '#models/stock';
-import { ItemWithQty, StockItem } from '#types/stock';
+import {
+  ItemWithQty,
+  StockItemCreatedDto,
+  StockItemCreateDto,
+  StockItemDataDto,
+  StockItemSummaryDto,
+} from '#types/stock';
 import db from '@adonisjs/lucid/services/db';
 import { randomUUID } from 'crypto';
 
 export default class StockService {
+  private stockDataMapper = new StockDataMapper();
   async isStockAvailable(stocks: Array<ItemWithQty>) {
     const foundStock = await Stock.query().whereIn(
       'item_id',
@@ -24,13 +32,17 @@ export default class StockService {
       throw new Error(`Stock item ${itemId} not found`);
     }
     await singleStock!.load('photos');
-    return singleStock.serialize() as StockItem;
+    const mappedSingleStockItem: StockItemDataDto =
+      this.stockDataMapper.mapStockModelToSingleStockItemDto(singleStock);
+    return mappedSingleStockItem;
+    //
   }
 
-  async fetchAvailableStock() {
+  async fetchAvailableStock(): Promise<Array<StockItemSummaryDto>> {
     const stocks = await Stock.query().where('available_qty', '>', 0).preload('photos');
-    const serializedStock = stocks.map((stock) => stock.serialize()) as Array<StockItem>;
-    return serializedStock;
+    const mappedStockItemSummary: Array<StockItemSummaryDto> =
+      this.stockDataMapper.mapStockModelToStockItemSummary(stocks);
+    return mappedStockItemSummary;
   }
 
   async updateStock(items: Array<ItemWithQty>) {
@@ -51,15 +63,16 @@ export default class StockService {
     });
   }
 
-  async createSingleItemStock(stock: StockItem) {
+  async createSingleItemStock(stock: StockItemCreateDto): Promise<StockItemCreatedDto> {
     stock.itemId = stock.itemId ?? randomUUID();
     const exists = await Stock.findBy({ itemId: stock.itemId });
     if (exists) {
       throw new Error(`Stock item = ${stock.itemId} already exists`);
     }
     const createdStockItemId = await db.transaction(async (trx) => {
-      const savedStockHead = await Stock.create(stock, { client: trx });
-      const savedStockPhotos = await savedStockHead.related('photos').createMany(stock.photos);
+      const stockModel = this.stockDataMapper.mapStockItemCreateDtoToStockModel(stock);
+      const savedStockHead = await Stock.create(stockModel, { client: trx });
+      const savedStockPhotos = await savedStockHead.related('photos').createMany(stockModel.photos);
 
       if (!savedStockHead || !savedStockPhotos) {
         throw new Error(`Could not create new stock item = ${stock.itemId}`);
@@ -67,6 +80,6 @@ export default class StockService {
 
       return savedStockHead.itemId;
     });
-    return createdStockItemId;
+    return { itemId: createdStockItemId };
   }
 }
