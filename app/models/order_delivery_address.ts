@@ -1,8 +1,8 @@
 import { DateTime } from 'luxon';
 import { BaseModel, column } from '@adonisjs/lucid/orm';
-import { Currency } from '#types/enum/currencyCode';
+import { CountryCode } from '#types/enum/countryCode';
 
-export default class OrderDetail extends BaseModel {
+export default class OrderDeliveryAddress extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })
   declare id: number;
 
@@ -10,25 +10,25 @@ export default class OrderDetail extends BaseModel {
   declare orderId: string;
 
   @column()
-  declare itemId: string;
+  declare streetName: string;
 
   @column()
-  declare itemName: string;
+  declare streetNumber: string;
 
   @column()
-  declare qty: number;
+  declare apartmentNumber?: string;
 
   @column()
-  declare itemPrice: number;
+  declare city: string;
 
   @column()
-  declare currency: Currency;
+  declare postalCode: string;
 
   @column()
-  declare vatAmount: number;
+  declare region?: string;
 
   @column()
-  declare vatRate: number;
+  declare countryCode: CountryCode;
 
   @column.dateTime({ autoCreate: true, serializeAs: null })
   declare createdAt: DateTime;
