@@ -1,6 +1,4 @@
-import { CountryCode } from '#types/countryCode';
 import { Token } from '#types/token';
-import { Address } from '#types/address';
 import { test } from '@japa/runner';
 
 const userAuthData = { email: 'test@example.com', password: 'Test123' };
