@@ -1,9 +1,4 @@
-import {
-  OrderInvoiceData,
-  InvoiceNumberOptions,
-  PreparedInvoiceNumber,
-  BaseInvoice,
-} from '#types/invoice';
+import { OrderInvoiceData, InvoiceNumberOptions, PreparedInvoiceNumber } from '#types/invoice';
 import db from '@adonisjs/lucid/services/db';
 import PrepareInvoice from '#services/prepare_invoice_service';
 import OrderInvoice from '#models/order_invoice';
@@ -12,8 +7,9 @@ import InvoiceDataMapper from '#mappers/invoice/InvoiceDataMapper';
 import OrderService from '#services/order_service';
 import { OrderDataDto } from '#types/order';
 import logger from '@adonisjs/core/services/logger';
+import { InvoiceBase } from '#types/interfaces/invoice/InvoiceBase';
 
-export default class SaveInvoice implements BaseInvoice {
+export default class SaveInvoice implements InvoiceBase {
   private orderService = new OrderService();
   private invoiceMapper = new InvoiceDataMapper();
   /**

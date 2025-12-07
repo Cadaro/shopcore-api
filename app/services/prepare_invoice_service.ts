@@ -1,14 +1,14 @@
 import InvoiceNumber from '#models/invoice_number';
-import {
-  DateSuffix,
-  InvoiceUtil,
-  InvoiceNumberOptions,
-  PreparedInvoiceNumber,
-} from '#types/invoice';
+import { DateSuffix, InvoiceNumberOptions, PreparedInvoiceNumber } from '#types/invoice';
 import db from '@adonisjs/lucid/services/db';
 import { DateTime } from 'luxon';
 import string from '@adonisjs/core/helpers/string';
-
+import { InvoiceUtil } from '#types/interfaces/invoice/InvoiceUtil';
+/**
+ * Service class for preparing invoice numbers based on specified options.
+ * Generates new invoice numbers by incrementing the current sequence and formatting it with
+ * optional prefix, separator, year, and month.
+ */
 export default class PrepareInvoice implements InvoiceUtil {
   private prefix: string;
   private separator: string;
