@@ -4,15 +4,15 @@ info:
   description: |
     OpenAPI specification for the ShopCore app.
     Contains endpoints for stocks, orders, users, customer invoice data and token authentication.
-    
+
     ## Authentication
     Most endpoints require authentication using Bearer tokens. Obtain a token by calling the `/api/auth/token` endpoint with valid credentials.
-    
+
     ## Supported Countries
     The system supports the following European countries: AT, BE, CH, DE, DK, ES, FI, FR, GB, IE, IT, NL, NO, PL, PT, SE
     ## Supported Currencies
     The system supports the following European currencies which are related to supported countries: EUR, CHF, DKK, GBP, NOK, PLN, SEK
-  version: "1.0.0"
+  version: '1.0.0'
   contact:
     name: ShopCore API Support
     email: support@shopcore.io
@@ -50,33 +50,65 @@ components:
         errors:
           type: array
           items:
-            $ref: '#/components/schemas/ErrorMessage' 
+            $ref: '#/components/schemas/ErrorMessage'
 
     CountryCode:
       type: string
       description: ISO 3166-1 alpha-2 country codes supported by the system
-      enum: ["AT", "BE", "CH", "DE", "DK", "ES", "FI", "FR", "GB", "IE", "IT", "NL", "NO", "PL", "PT", "SE"]
-      example: "PL"
+      enum:
+        [
+          'AT',
+          'BE',
+          'CH',
+          'DE',
+          'DK',
+          'ES',
+          'FI',
+          'FR',
+          'GB',
+          'IE',
+          'IT',
+          'NL',
+          'NO',
+          'PL',
+          'PT',
+          'SE',
+        ]
+      example: 'PL'
     CurrencyCode:
       type: string
       description: ISO 4217 currency codes supported by the system, corresponding to supported countries
-      enum: ["EUR", "CHF", "DKK", "GBP", "NOK", "PLN", "SEK"]
-      example: "PLN"
+      enum: ['EUR', 'CHF', 'DKK', 'GBP', 'NOK', 'PLN', 'SEK']
+      example: 'PLN'
     DeliveryMethod:
       type: string
-      enum: ["PICKUP_POINT", "HOME_DELIVERY"]
+      enum: ['PICKUP_POINT', 'HOME_DELIVERY']
     OrderStatus:
       type: string
       description: Possible statuses for order
-      enum: ["WAITING_FOR_PAYMENT", "NEW", "PROCESSING", "COMPLETED", "SENT", "ON_THE_WAY", "DELIVERED", "DELIVERED_PICKUP_POINT", "CANCELED", "ON_HOLD", "RETURNED", "FAILED_DELIVERY", "RETURN_TO_SENDER"]
-      example: "PROCESSING"
+      enum:
+        [
+          'WAITING_FOR_PAYMENT',
+          'NEW',
+          'PROCESSING',
+          'COMPLETED',
+          'SENT',
+          'ON_THE_WAY',
+          'DELIVERED',
+          'DELIVERED_PICKUP_POINT',
+          'CANCELED',
+          'ON_HOLD',
+          'RETURNED',
+          'FAILED_DELIVERY',
+          'RETURN_TO_SENDER',
+        ]
+      example: 'PROCESSING'
     CustomerType:
       type: string
-      enum: ["PERSON", "COMPANY"]
+      enum: ['PERSON', 'COMPANY']
     PaymentMethod:
       type: string
-      enum: ["BANK_TRANSFER", "COD"]
-
+      enum: ['BANK_TRANSFER', 'COD']
 
     Address:
       type: object
@@ -127,11 +159,11 @@ components:
           nullable: true
           description: 'required for customerType == COMPANY; optional for person'
         customerType:
-           $ref: '#/components/schemas/CustomerType' 
+          $ref: '#/components/schemas/CustomerType'
         address:
           type: object
           $ref: '#/components/schemas/Address'
-        
+
     User:
       type: object
       properties:
@@ -202,7 +234,7 @@ components:
         type:
           type: string
           enum:
-          - Bearer
+            - Bearer
         expiresAt:
           type: string
           format: date-time
@@ -314,20 +346,20 @@ components:
             $ref: '#/components/schemas/StockPhoto'
           description: 'list of photos'
       example:
-        itemId: "blue-tshirt-xl"
+        itemId: 'blue-tshirt-xl'
         price: 29.99
-        priceCurrency: "PLN"
+        priceCurrency: 'PLN'
         vatAmount: 5.98
         vatRate: 0.23
-        name: "Blue T-Shirt"
-        itemDescription: "Comfortable cotton t-shirt in blue color"
-        size: "XL"
+        name: 'Blue T-Shirt'
+        itemDescription: 'Comfortable cotton t-shirt in blue color'
+        size: 'XL'
         availableQty: 100
         photos:
-          - url: "https://example.com/photo1.jpg"
-            name: "Front view"
-          - url: "https://example.com/photo2.jpg"
-            name: "Back view"
+          - url: 'https://example.com/photo1.jpg'
+            name: 'Front view'
+          - url: 'https://example.com/photo2.jpg'
+            name: 'Back view'
     StockItemCreatedDto:
       type: object
       properties:
@@ -349,14 +381,14 @@ components:
           $ref: '#/components/schemas/DeliveryMethod'
         pickupPointId:
           type: string
-          description: "required when address does not exist"
+          description: 'required when address does not exist'
         address:
           type: object
           $ref: '#/components/schemas/Address'
-          description: "required when pickupPointId does not exist"
+          description: 'required when pickupPointId does not exist'
         additionalNote:
           type: string
-          description: "additional information for delivery"
+          description: 'additional information for delivery'
         deliveryPrice:
           type: number
           format: double
@@ -383,7 +415,7 @@ components:
           example: 30.99
         courier:
           type: string
-          example: "GLOBAL COURIER INC"
+          example: 'GLOBAL COURIER INC'
         paymentMethod:
           $ref: '#/components/schemas/PaymentMethod'
         deliveryMethod:
@@ -478,24 +510,24 @@ components:
           items:
             $ref: '#/components/schemas/OrderSku'
       example:
-        firstName: "John"
-        lastName: "Doe"
-        email: "j.doe@example.com"
-        phoneNumber: "1-473-223-4290"
-        paymentMethod: "BANK_TRANSFER"
+        firstName: 'John'
+        lastName: 'Doe'
+        email: 'j.doe@example.com'
+        phoneNumber: '1-473-223-4290'
+        paymentMethod: 'BANK_TRANSFER'
         delivery:
-          courier: "GLOBAL COURIER INC"
-          method: "PICKUP_POINT"
-          additionalNote: "pin code 1234"
+          courier: 'GLOBAL COURIER INC'
+          method: 'PICKUP_POINT'
+          additionalNote: 'pin code 1234'
           deliveryPrice: 9
           deliveryVatRate: 0.23
-          currency: "EUR"
+          currency: 'EUR'
         items:
-          - itemId: "abc123"
-            itemName: "Blue T-Shirt"
+          - itemId: 'abc123'
+            itemName: 'Blue T-Shirt'
             qty: 2
             itemPrice: 29.99
-            currency: "EUR"
+            currency: 'EUR'
             vatAmount: 5.98
             vatRate: 0.23
     OrderCreatedDto:
@@ -510,27 +542,27 @@ components:
             $ref: '#/components/schemas/OrderSku'
 paths:
   /api/auth/token:
-      post:
-        tags:
-          - auth
-        summary: Obtain token
-        description: Obtain an authentication token by providing credentials (email and password).
-        requestBody:
-          required: true
+    post:
+      tags:
+        - auth
+      summary: Obtain token
+      description: Obtain an authentication token by providing credentials (email and password).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+      responses:
+        '200':
+          description: Authentication successful
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenRequest'
-        responses:
-          '200':
-            description: Authentication successful
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/TokenResponse'
-          '401':
-            description: Invalid credentials
-          
+                $ref: '#/components/schemas/TokenResponse'
+        '401':
+          description: Invalid credentials
+
   /api/auth/users:
     get:
       tags:
@@ -545,7 +577,7 @@ paths:
           content:
             application/json:
               schema:
-                  $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/User'
         '401':
           description: Unauthorized
         '403':
@@ -707,7 +739,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-          
+
   /api/stocks:
     get:
       tags:
@@ -723,7 +755,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/StockItemSummaryDto'
-      
+
     post:
       tags:
         - stocks
