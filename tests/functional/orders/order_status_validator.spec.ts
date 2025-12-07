@@ -34,17 +34,23 @@ test.group('OrderStatusValidatorService', () => {
     try {
       OrderStatusValidatorService.validateTransition(OrderStatus.NEW, OrderStatus.COMPLETED);
       assert.fail('Should have thrown an error');
-    } catch (error) {
+    } catch (error: unknown) {
       assert.instanceOf(error, OrderStatusValidationError);
-      assert.include(error.message, "Invalid status transition from 'NEW' to 'COMPLETED'");
+      assert.include(
+        (error as Error).message,
+        "Invalid status transition from 'NEW' to 'COMPLETED'"
+      );
     }
 
     try {
       OrderStatusValidatorService.validateTransition(OrderStatus.DELIVERED, OrderStatus.PROCESSING);
       assert.fail('Should have thrown an error');
-    } catch (error) {
+    } catch (error: unknown) {
       assert.instanceOf(error, OrderStatusValidationError);
-      assert.include(error.message, "Invalid status transition from 'DELIVERED' to 'PROCESSING'");
+      assert.include(
+        (error as Error).message,
+        "Invalid status transition from 'DELIVERED' to 'PROCESSING'"
+      );
     }
   });
 
@@ -123,13 +129,13 @@ test.group('OrderStatusValidatorService', () => {
         DeliveryMethod.HOME_DELIVERY
       );
       assert.fail('Should have thrown an error');
-    } catch (error) {
+    } catch (error: unknown) {
       assert.instanceOf(error, OrderStatusValidationError);
       assert.include(
-        error.message,
+        (error as Error).message,
         "Status 'DELIVERED_PICKUP_POINT' is only valid for PICKUP_POINT delivery method"
       );
-      assert.include(error.message, 'HOME_DELIVERY');
+      assert.include((error as Error).message, 'HOME_DELIVERY');
     }
   });
 
@@ -190,13 +196,13 @@ test.group('OrderStatusValidatorService', () => {
         DeliveryMethod.HOME_DELIVERY
       );
       assert.fail('Should have thrown an error');
-    } catch (error) {
+    } catch (error: unknown) {
       assert.instanceOf(error, OrderStatusValidationError);
       assert.include(
-        error.message,
+        (error as Error).message,
         "Status 'DELIVERED_PICKUP_POINT' is only valid for PICKUP_POINT delivery method"
       );
-      assert.include(error.message, 'HOME_DELIVERY');
+      assert.include((error as Error).message, 'HOME_DELIVERY');
     }
   });
 
@@ -390,7 +396,7 @@ test.group('OrderStatusValidatorService', () => {
         DeliveryMethod.HOME_DELIVERY
       );
       assert.fail('Should have thrown an error');
-    } catch (error) {
+    } catch (error: any) {
       assert.instanceOf(error, OrderStatusValidationError);
       assert.equal(error.currentStatus, OrderStatus.NEW);
       assert.equal(error.targetStatus, OrderStatus.DELIVERED);

@@ -1,7 +1,7 @@
 import { Currency } from '#types/enum/currencyCode';
-import { StockItemDataDto } from '#types/stock';
+import { StockItemCreateDto } from '#types/stock';
 
-export const newItemWithoutItemId: StockItemDataDto = {
+export const newItemWithoutItemId: StockItemCreateDto = {
   itemDescription: 'It is a nice test item, very soft. Pls buy me.',
   name: 'Test item',
   price: 9.99,
