@@ -96,20 +96,3 @@ export type PreparedInvoiceNumber = Readonly<{
   newInvoiceNumber: string;
   currentInvoiceNumberSequence: number;
 }>;
-
-/** Invoice number components structure */
-export interface InvoiceUtil {
-  prepareNumber(): Promise<PreparedInvoiceNumber>;
-}
-
-/** Base interface for invoice operations */
-export interface BaseInvoice {
-  save(invoiceData: OrderInvoiceData, options?: InvoiceNumberOptions): Promise<string>;
-}
-
-/** Base interface for invoice customer operations */
-export interface BaseInvoiceCustomer {
-  fetchCustomerData(userId: string): Promise<InvoiceCustomerData>;
-  saveCustomerData(data: InvoiceCustomerWithUserId): Promise<number>;
-  updateCustomerData(data: Partial<InvoiceCustomerWithUserId>): Promise<void>;
-}
