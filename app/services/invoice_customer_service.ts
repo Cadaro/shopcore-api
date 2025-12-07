@@ -1,17 +1,14 @@
 import InvoiceCustomerMapper from '#mappers/invoice/InvoiceCustomerMapper';
 import InvoiceCustomers from '#models/invoice_customer';
-import {
-  BaseInvoiceCustomer,
-  InvoiceCustomerData,
-  InvoiceCustomerWithUserId,
-} from '#types/invoice';
+import { InvoiceCustomerBase } from '#types/interfaces/invoice/InvoiceCustomerBase';
+import { InvoiceCustomerData, InvoiceCustomerWithUserId } from '#types/invoice';
 import db from '@adonisjs/lucid/services/db';
 
 /**
  * Service class for managing invoice customer data.
  * Provides methods to fetch, save, and update customer invoice information in the database.
  */
-export default class InvoiceCustomer implements BaseInvoiceCustomer {
+export default class InvoiceCustomer implements InvoiceCustomerBase {
   private invoiceCustomerMapper = new InvoiceCustomerMapper();
   async fetchCustomerData(userId: string): Promise<InvoiceCustomerData> {
     const invoiceCustomerData = await InvoiceCustomers.findBy({ userId });
