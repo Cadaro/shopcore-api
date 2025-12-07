@@ -5,12 +5,14 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "start": "node bin/server.js",
+    "dev": "node ace serve --watch",
     "build": "node ace build",
-    "dev": "node ace serve --hmr",
+    "start": "node build/bin/server.js",
     "test": "node ace test",
-    "lint": "eslint .",
+    "lint": "eslint . --ext=. ts",
+    "lint:fix": "eslint . --ext=. ts --fix",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit"
   },
   "imports": {
