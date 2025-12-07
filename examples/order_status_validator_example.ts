@@ -2,6 +2,7 @@ import {
   OrderStatusValidatorService,
   OrderStatusValidationError,
 } from '#services/order_status_validator_service';
+import { DeliveryMethod } from '#types/enum/deliveryMethod';
 import { OrderStatus } from '#types/enum/orderStatus';
 
 /**
@@ -49,7 +50,10 @@ export class OrderStatusExample {
     ];
 
     try {
-      OrderStatusValidatorService.validateStatusHistory(homeDeliveryPath, 'HOME_DELIVERY');
+      OrderStatusValidatorService.validateStatusHistory(
+        homeDeliveryPath,
+        DeliveryMethod.HOME_DELIVERY
+      );
       console.log('✅ Complete home delivery path is valid');
       console.log(`   Path: ${homeDeliveryPath.join(' -> ')}`);
     } catch (error) {
@@ -78,7 +82,10 @@ export class OrderStatusExample {
     ];
 
     try {
-      OrderStatusValidatorService.validateStatusHistory(pickupPointFailurePath, 'PICKUP_POINT');
+      OrderStatusValidatorService.validateStatusHistory(
+        pickupPointFailurePath,
+        DeliveryMethod.PICKUP_POINT
+      );
       console.log('✅ Pickup point failure path is valid');
       console.log(`   Path: ${pickupPointFailurePath.join(' -> ')}`);
     } catch (error) {
@@ -106,7 +113,7 @@ export class OrderStatusExample {
     ];
 
     try {
-      OrderStatusValidatorService.validateStatusHistory(pathWithHold, 'HOME_DELIVERY');
+      OrderStatusValidatorService.validateStatusHistory(pathWithHold, DeliveryMethod.HOME_DELIVERY);
       console.log('✅ Path with ON_HOLD status is valid');
       console.log(`   Path: ${pathWithHold.join(' -> ')}`);
     } catch (error) {
@@ -131,14 +138,14 @@ export class OrderStatusExample {
     // With HOME_DELIVERY
     const homeDeliveryNext = OrderStatusValidatorService.getValidNextStatuses(
       currentStatus,
-      'HOME_DELIVERY'
+      DeliveryMethod.HOME_DELIVERY
     );
     console.log(`From ${currentStatus} (HOME_DELIVERY): ${homeDeliveryNext.join(', ')}`);
 
     // With PICKUP_POINT
     const pickupPointNext = OrderStatusValidatorService.getValidNextStatuses(
       currentStatus,
-      'PICKUP_POINT'
+      DeliveryMethod.PICKUP_POINT
     );
     console.log(`From ${currentStatus} (PICKUP_POINT): ${pickupPointNext.join(', ')}`);
   }

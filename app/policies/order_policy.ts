@@ -7,13 +7,13 @@ export default class OrderPolicy extends BasePolicy {
   view(user: User, order: Order): AuthorizerResponse {
     // User middleware ensures authentication and abilities
     // Only check ownership
-    return user.id === order.userId;
+    return user.uuid === order.userId;
   }
 
   viewList(user: User, orderList: Order[]): AuthorizerResponse {
     // User middleware ensures authentication and abilities
     // Only check that all orders belong to the user
-    return orderList.every((order) => order.userId === user.id);
+    return orderList.every((order) => order.userId === user.uuid);
   }
 
   create(_user: User): AuthorizerResponse {

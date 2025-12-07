@@ -1,6 +1,6 @@
-import env from '#start/env'
-import app from '@adonisjs/core/services/app'
-import { defineConfig, targets } from '@adonisjs/core/logger'
+import env from '#start/env';
+import app from '@adonisjs/core/services/app';
+import { defineConfig, targets } from '@adonisjs/core/logger';
 
 const loggerConfig = defineConfig({
   default: 'app',
@@ -22,14 +22,15 @@ const loggerConfig = defineConfig({
       },
     },
   },
-})
+});
 
-export default loggerConfig
+export default loggerConfig;
 
 /**
  * Inferring types for the list of loggers you have configured
  * in your application.
  */
 declare module '@adonisjs/core/types' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   export interface LoggersList extends InferLoggers<typeof loggerConfig> {}
 }

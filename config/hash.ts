@@ -1,4 +1,4 @@
-import { defineConfig, drivers } from '@adonisjs/core/hash'
+import { defineConfig, drivers } from '@adonisjs/core/hash';
 
 const hashConfig = defineConfig({
   default: 'scrypt',
@@ -11,14 +11,15 @@ const hashConfig = defineConfig({
       maxMemory: 33554432,
     }),
   },
-})
+});
 
-export default hashConfig
+export default hashConfig;
 
 /**
  * Inferring types for the list of hashers you have configured
  * in your application.
  */
 declare module '@adonisjs/core/types' {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   export interface HashersList extends InferHashers<typeof hashConfig> {}
 }

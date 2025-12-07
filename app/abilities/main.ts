@@ -11,5 +11,3 @@
 | templates.
 |
 */
-
-import { Bouncer } from '@adonisjs/bouncer';
