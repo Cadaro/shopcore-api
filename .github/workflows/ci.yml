@@ -39,8 +39,8 @@ jobs:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: rootpassword
-          MYSQL_DATABASE: test
+          MYSQL_ROOT_PASSWORD: ci_mysql_root_password
+          MYSQL_DATABASE: shopcore_test
         ports:
           - 3306:3306
         options: >-
@@ -64,30 +64,49 @@ jobs:
 
     - name: Wait for MySQL
       run: |
-        while ! mysqladmin ping -h"127.0.0.1" -P"3306" --silent; do
-          sleep 1
+        for i in {1..30}; do
+          if mysqladmin ping -h"127.0.0.1" -P"3306" -u"root" -p"ci_mysql_root_password" --silent; then
+            echo "✅ MySQL is ready!"
+            exit 0
+          fi
+          echo "Waiting for MySQL...  ($i/30)"
+          sleep 2
         done
+        echo "❌ MySQL failed to start"
+        exit 1
 
     - name: Run migrations
       env:
+        TZ: UTC
+        PORT: 3333
+        HOST: localhost
+        LOG_LEVEL: info
+        PROTOCOL: http
+        APP_KEY: ${{ secrets.APP_KEY }}
+        NODE_ENV: test
         DB_HOST: 127.0.0.1
         DB_PORT: 3306
         DB_USER: root
-        DB_PASSWORD: rootpassword
-        DB_DATABASE: test
-        NODE_ENV: test
-        APP_KEY: ${{ secrets.APP_KEY }}
+        DB_PASSWORD: ci_mysql_root_password
+        DB_DATABASE: shopcore_test
+        DB_NAME: shopcore_test
       run: node ace migration:run --force
 
     - name: Run tests
       env:
+        TZ: UTC
+        PORT: 3333
+        HOST: localhost
+        LOG_LEVEL: info
+        PROTOCOL: http
+        APP_KEY: ${{ secrets.APP_KEY }}
+        NODE_ENV: test
         DB_HOST: 127.0.0.1
         DB_PORT: 3306
         DB_USER: root
-        DB_PASSWORD: rootpassword
-        DB_DATABASE: test
-        NODE_ENV: test
-        APP_KEY: ${{ secrets.APP_KEY }}
+        DB_PASSWORD: ci_mysql_root_password
+        DB_DATABASE: shopcore_test
+        DB_NAME: shopcore_test
       run: npm test
 
   build:
