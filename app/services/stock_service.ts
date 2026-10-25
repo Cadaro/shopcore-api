@@ -9,6 +9,11 @@ import {
 } from '#types/stock';
 import db from '@adonisjs/lucid/services/db';
 import { randomUUID } from 'crypto';
+import {
+  ConflictException,
+  DomainRuleException,
+  NotFoundException,
+} from '#exceptions/domain_exception';
 
 export default class StockService {
   private stockDataMapper = new StockDataMapper();
@@ -29,7 +34,7 @@ export default class StockService {
   async fetchSingleStockItem(itemId: string) {
     const singleStock = await Stock.findBy({ itemId });
     if (!singleStock) {
-      throw new Error(`Stock item ${itemId} not found`);
+      throw new NotFoundException(`Stock item ${itemId} not found`);
     }
     await singleStock!.load('photos');
     const mappedSingleStockItem: StockItemDataDto =
@@ -48,13 +53,13 @@ export default class StockService {
   async updateStock(items: Array<ItemWithQty>) {
     const availableStock = await this.isStockAvailable(items);
     if (!availableStock) {
-      throw new Error('Stock is not available');
+      throw new DomainRuleException('Stock is not available');
     }
     await db.transaction(async (trx) => {
       for (const item of items) {
         const stockItem = await Stock.findBy({ itemId: item.itemId }, { client: trx });
         if (!stockItem) {
-          throw new Error(`Stock item ${item.itemId} not found`);
+          throw new NotFoundException(`Stock item ${item.itemId} not found`);
         }
         stockItem.availableQty -= item.qty;
         stockItem.useTransaction(trx);
@@ -67,7 +72,7 @@ export default class StockService {
     stock.itemId = stock.itemId ?? randomUUID();
     const exists = await Stock.findBy({ itemId: stock.itemId });
     if (exists) {
-      throw new Error(`Stock item = ${stock.itemId} already exists`);
+      throw new ConflictException(`Stock item = ${stock.itemId} already exists`);
     }
     const createdStockItemId = await db.transaction(async (trx) => {
       const stockModel = this.stockDataMapper.mapStockItemCreateDtoToStockModel(stock);

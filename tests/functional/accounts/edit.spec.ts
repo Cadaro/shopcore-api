@@ -24,6 +24,6 @@ test.group('Edit user', () => {
       .patch(`/api/auth/users/`)
       .bearerToken(authToken.token)
       .header('content-type', 'application/json');
-    responseEdit.assertStatus(400);
+    responseEdit.assertStatus(422);
   });
 });

@@ -3,6 +3,7 @@ import TokenService from '#services/token_service';
 import { createAuthValidator } from '#validators/auth';
 import { inject } from '@adonisjs/core';
 import type { HttpContext } from '@adonisjs/core/http';
+import { UnauthorizedException } from '#exceptions/domain_exception';
 
 @inject()
 export default class TokenController {
@@ -17,7 +18,7 @@ export default class TokenController {
     const user = await User.verifyCredentials(email, password);
 
     if (!user) {
-      return response.unauthorized();
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const token = await this.tokenService.createToken(user);

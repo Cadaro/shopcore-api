@@ -13,6 +13,7 @@ import { DeliveryAddressDb } from '#types/deliveryData';
 import { DeliveryMethod } from '#types/enum/deliveryMethod';
 import logger from '@adonisjs/core/services/logger';
 import { Address } from '#types/address';
+import { DomainRuleException } from '#exceptions/domain_exception';
 
 export default class OrderDataMapper {
   mapOrderModelToOrderDataType(orderModel: Order): OrderDataDto {
@@ -59,14 +60,14 @@ export default class OrderDataMapper {
 
     if (orderModel.deliveryMethod === DeliveryMethod.PICKUP_POINT) {
       if (!orderModel.pickupPointId) {
-        throw new Error('Missing pickup point ID for PICKUP_POINT method');
+        throw new DomainRuleException('Missing pickup point ID for PICKUP_POINT method');
       }
       result.delivery!.pickupPointId = orderModel.pickupPointId;
     }
 
     if (orderModel.deliveryMethod === DeliveryMethod.HOME_DELIVERY) {
       if (!orderModel.deliveryAddress) {
-        throw new Error('Missing delivery address for HOME_DELIVERY method');
+        throw new DomainRuleException('Missing delivery address for HOME_DELIVERY method');
       }
       result.delivery!.address = {
         streetName: orderModel.deliveryAddress.streetName,
@@ -91,17 +92,19 @@ export default class OrderDataMapper {
     const orderSummaries: Array<OrderSummaryDto> = [];
     ordersWithDetailsDb.forEach((order) => {
       if (order.details.length === 0) {
-        throw new Error(`Order ${order.orderId} has no details`);
+        throw new DomainRuleException(`Order ${order.orderId} has no details`);
       }
       //check if all items have the same currency
       const allItemsSameCurrency = order.details.every(
         (item) => item.currency === order.details[0].currency
       );
       if (!allItemsSameCurrency) {
-        throw new Error(`Order ${order.orderId} has items with different currencies`);
+        throw new DomainRuleException(`Order ${order.orderId} has items with different currencies`);
       }
       if (order.details[0].currency !== order.deliveryCurrency) {
-        throw new Error(`Order ${order.orderId} has different currency between items and delivery`);
+        throw new DomainRuleException(
+          `Order ${order.orderId} has different currency between items and delivery`
+        );
       }
 
       const totalAmount = order.details.reduce((sum, item) => sum + item.itemPrice * item.qty, 0);
@@ -131,11 +134,11 @@ export default class OrderDataMapper {
     );
     if (!allItemsSameCurrency) {
       logger.error('Currency mismatch between items in the order');
-      throw new Error(`Order has items with different currencies`);
+      throw new DomainRuleException('Order has items with different currencies');
     }
     if (orderCreate.items[0].currency !== orderCreate.delivery.deliveryCurrency) {
       logger.error('Currency mismatch between items and delivery');
-      throw new Error(`Order has different currency between items and delivery`);
+      throw new DomainRuleException('Order has different currency between items and delivery');
     }
 
     logger.info('All items have the same currency, proceeding with mapping');

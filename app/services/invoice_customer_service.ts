@@ -3,6 +3,7 @@ import InvoiceCustomers from '#models/invoice_customer';
 import { InvoiceCustomerBase } from '#types/interfaces/invoice/InvoiceCustomerBase';
 import { InvoiceCustomerData, InvoiceCustomerWithUserId } from '#types/invoice';
 import db from '@adonisjs/lucid/services/db';
+import { ConflictException, NotFoundException } from '#exceptions/domain_exception';
 
 /**
  * Service class for managing invoice customer data.
@@ -14,7 +15,7 @@ export default class InvoiceCustomer implements InvoiceCustomerBase {
     const invoiceCustomerData = await InvoiceCustomers.findBy({ userId });
 
     if (!invoiceCustomerData) {
-      throw new Error(`Invoice data for user ${userId} not found`);
+      throw new NotFoundException(`Invoice data for user ${userId} not found`);
     }
     return this.invoiceCustomerMapper.mapInvoiceCustomerModelToInvoiceCustomerType(
       invoiceCustomerData
@@ -35,7 +36,7 @@ export default class InvoiceCustomer implements InvoiceCustomerBase {
         { client: trx }
       );
       if (invoiceCustomer) {
-        throw new Error(`Invoice customer data already exists for user ${data.userId}`);
+        throw new ConflictException(`Invoice customer data already exists for user ${data.userId}`);
       }
 
       const invoiceData = await InvoiceCustomers.create(
@@ -60,7 +61,7 @@ export default class InvoiceCustomer implements InvoiceCustomerBase {
         { client: trx }
       );
       if (!invoiceCustomer) {
-        throw new Error(`Invoice data for user ${data.userId} not found`);
+        throw new NotFoundException(`Invoice data for user ${data.userId} not found`);
       }
 
       await invoiceCustomer

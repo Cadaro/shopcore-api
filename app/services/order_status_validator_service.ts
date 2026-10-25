@@ -1,7 +1,8 @@
 import { OrderStatus } from '#types/enum/orderStatus';
 import { DeliveryMethod } from '#types/enum/deliveryMethod';
+import { DomainRuleException } from '#exceptions/domain_exception';
 
-export class OrderStatusValidationError extends Error {
+export class OrderStatusValidationError extends DomainRuleException {
   public currentStatus: OrderStatus;
   public targetStatus: OrderStatus;
   public deliveryMethod?: DeliveryMethod;
@@ -17,9 +18,6 @@ export class OrderStatusValidationError extends Error {
     this.currentStatus = currentStatus;
     this.targetStatus = targetStatus;
     this.deliveryMethod = deliveryMethod;
-
-    // Restore prototype chain
-    Object.setPrototypeOf(this, OrderStatusValidationError.prototype);
   }
 }
 

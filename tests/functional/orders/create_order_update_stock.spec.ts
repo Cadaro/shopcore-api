@@ -42,6 +42,6 @@ test.group('Orders create for stock update', () => {
       .header('content-type', 'application/json')
       .json(orderCreateWithUnavailableStock);
 
-    response.assertStatus(400);
+    response.assertStatus(422);
   });
 });

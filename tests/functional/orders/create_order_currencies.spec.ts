@@ -20,7 +20,7 @@ test.group('Orders create', () => {
       .header('content-type', 'application/json')
       .json(orderCreateDifferentItemAndDeliveryCurrency);
 
-    response.assertStatus(400);
+    response.assertStatus(422);
   });
 
   test('should fail create order with different currency between items', async ({ client }) => {
@@ -33,6 +33,6 @@ test.group('Orders create', () => {
       .header('content-type', 'application/json')
       .json(orderCreateDifferentItemsCurrency);
 
-    response.assertStatus(400);
+    response.assertStatus(422);
   });
 });
