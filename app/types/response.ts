@@ -1,11 +1,7 @@
-export interface IResponseError {
-  errors: Array<{ message: string }>;
-}
+import type { ErrorDetail } from '#exceptions/domain_exception';
 
-export enum StatusCodeEnum {
-  BadRequest = 'badRequest',
-  Forbidden = 'forbidden',
-  NotFound = 'notFound',
-  Conflict = 'conflict',
-  Unauthorized = 'unauthorized',
+export interface IResponseError {
+  code: string;
+  message: string;
+  details?: ErrorDetail[];
 }

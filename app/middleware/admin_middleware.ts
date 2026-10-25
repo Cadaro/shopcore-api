@@ -2,8 +2,7 @@ import type { HttpContext } from '@adonisjs/core/http';
 import type { NextFn } from '@adonisjs/core/types/http';
 import { UserAbilitiesEnum } from '#types/user';
 import { Authenticators } from '@adonisjs/auth/types';
-import ResponseErrorHandler from '#exceptions/response';
-import { StatusCodeEnum } from '#types/response';
+import { ForbiddenException, UnauthorizedException } from '#exceptions/domain_exception';
 
 /**
  * Admin middleware is used to ensure only admin users with '*' ability
@@ -16,37 +15,25 @@ export default class AdminMiddleware {
     next: NextFn,
     options: { guards?: (keyof Authenticators)[] } = { guards: ['api'] }
   ) {
-    const { auth, response } = ctx;
+    const { auth } = ctx;
 
     await ctx.auth.authenticateUsing(options.guards);
 
     // Check if user is authenticated
     if (!auth.isAuthenticated) {
-      return new ResponseErrorHandler().handleError(
-        response,
-        StatusCodeEnum.Unauthorized,
-        new Error('Authentication required')
-      );
+      throw new UnauthorizedException('Authentication required');
     }
 
     const user = auth.user!;
 
     // Check if user has current access token
     if (!user.currentAccessToken) {
-      return new ResponseErrorHandler().handleError(
-        response,
-        StatusCodeEnum.Unauthorized,
-        new Error('Valid access token required')
-      );
+      throw new UnauthorizedException('Valid access token required');
     }
 
     // Check if user has admin privileges (wildcard ability)
     if (!user.currentAccessToken.allows(UserAbilitiesEnum.ADMIN)) {
-      return new ResponseErrorHandler().handleError(
-        response,
-        StatusCodeEnum.Forbidden,
-        new Error('Admin privileges required')
-      );
+      throw new ForbiddenException('Admin privileges required');
     }
 
     return next();

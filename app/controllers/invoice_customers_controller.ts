@@ -1,13 +1,12 @@
-import ResponseErrorHandler from '#exceptions/response';
 import CustomerInvoiceDataPolicy from '#policies/customer_invoice_data_policy';
 import InvoiceCustomerService from '#services/invoice_customer_service';
-import { StatusCodeEnum } from '#types/response';
 import {
   createInvoiceCustomerValidator,
   updateInvoiceCustomerValidator,
 } from '#validators/invoice_customer';
 import { inject } from '@adonisjs/core';
 import type { HttpContext } from '@adonisjs/core/http';
+import { ForbiddenException } from '#exceptions/domain_exception';
 
 @inject()
 export default class InvoiceCustomersController {
@@ -15,35 +14,27 @@ export default class InvoiceCustomersController {
 
   async index({ auth, response }: HttpContext) {
     // User middleware ensures authentication, so auth.user is guaranteed to exist
-    try {
-      const customerInvoiceData = await this.invoiceCustomerService.fetchCustomerData(
-        auth.user!.uuid
-      );
-      return response.ok(customerInvoiceData);
-    } catch (e) {
-      return new ResponseErrorHandler().handleError(response, StatusCodeEnum.NotFound, e);
-    }
+    const customerInvoiceData = await this.invoiceCustomerService.fetchCustomerData(
+      auth.user!.uuid
+    );
+    return response.ok(customerInvoiceData);
   }
 
   async store({ auth, request, response, bouncer }: HttpContext) {
     // User middleware ensures authentication, so auth.user is guaranteed to exist
     if (await bouncer.with(CustomerInvoiceDataPolicy).denies('create')) {
-      return response.forbidden();
+      throw new ForbiddenException('You are not authorized to create this resource');
     }
 
     const validatedInvoiceCustomerData = await request.validateUsing(
       createInvoiceCustomerValidator
     );
 
-    try {
-      const customerInvoiceDataId = await this.invoiceCustomerService.saveCustomerData({
-        userId: auth.user!.uuid,
-        ...validatedInvoiceCustomerData,
-      });
-      return response.created({ id: customerInvoiceDataId });
-    } catch (e) {
-      return new ResponseErrorHandler().handleError(response, StatusCodeEnum.BadRequest, e);
-    }
+    const customerInvoiceDataId = await this.invoiceCustomerService.saveCustomerData({
+      userId: auth.user!.uuid,
+      ...validatedInvoiceCustomerData,
+    });
+    return response.created({ id: customerInvoiceDataId });
   }
 
   async update({ auth, request, response }: HttpContext) {
@@ -52,14 +43,10 @@ export default class InvoiceCustomersController {
       updateInvoiceCustomerValidator
     );
 
-    try {
-      await this.invoiceCustomerService.updateCustomerData({
-        userId: auth.user!.uuid,
-        ...validatedInvoiceCustomerData,
-      });
-      return response.noContent();
-    } catch (e) {
-      return new ResponseErrorHandler().handleError(response, StatusCodeEnum.BadRequest, e);
-    }
+    await this.invoiceCustomerService.updateCustomerData({
+      userId: auth.user!.uuid,
+      ...validatedInvoiceCustomerData,
+    });
+    return response.noContent();
   }
 }

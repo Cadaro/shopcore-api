@@ -4,6 +4,7 @@ import {
   InvoiceCustomerTypeEnum,
   InvoiceCustomerWithUserId,
 } from '#types/invoice';
+import { DomainRuleException } from '#exceptions/domain_exception';
 
 export default class InvoiceCustomerMapper {
   mapInvoiceCustomerModelToInvoiceCustomerType(
@@ -24,14 +25,14 @@ export default class InvoiceCustomerMapper {
       invoiceCustomersModel.customerType === InvoiceCustomerTypeEnum.PERSON &&
       (!invoiceCustomersModel.firstName || !invoiceCustomersModel.lastName)
     ) {
-      throw new Error('Missing firstName or lastName for customer of type PERSON');
+      throw new DomainRuleException('Missing firstName or lastName for customer of type PERSON');
     }
 
     if (
       invoiceCustomersModel.customerType === InvoiceCustomerTypeEnum.COMPANY &&
       (!invoiceCustomersModel.companyName || !invoiceCustomersModel.taxId)
     ) {
-      throw new Error('Missing companyName or taxId for customer of type COMPANY');
+      throw new DomainRuleException('Missing companyName or taxId for customer of type COMPANY');
     }
 
     if (invoiceCustomersModel.customerType === InvoiceCustomerTypeEnum.COMPANY) {

@@ -10,6 +10,7 @@ import OrderDataMapper from '#mappers/order/OrderDataMapper';
 import { OrderServiceBase } from '#types/interfaces/order/OrderServiceBase';
 import { DeliveryMethod } from '#types/enum/deliveryMethod';
 import logger from '@adonisjs/core/services/logger';
+import { NotFoundException } from '#exceptions/domain_exception';
 
 export default class OrderService implements OrderServiceBase {
   private orderDataMapper = new OrderDataMapper();
@@ -75,7 +76,7 @@ export default class OrderService implements OrderServiceBase {
   async fetchUserSingleOrder(orderId: string, userId: string): Promise<OrderDataDto> {
     const order = await Order.findBy({ orderId, userId });
     if (!order) {
-      throw new Error(`Order ${orderId} not found`);
+      throw new NotFoundException(`Order ${orderId} not found`);
     }
     await order.load('details');
     if (order.deliveryMethod === DeliveryMethod.HOME_DELIVERY) {
