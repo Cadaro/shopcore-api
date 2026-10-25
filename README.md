@@ -30,31 +30,57 @@ This platform is actively developed and expanding with new features to meet vari
 
 ```
 git clone https://github.com/Cadaro/shopcore-api.git
-npm install
+npm ci
 ```
 
-When installation packages via NPM, copy `.env.example` and name it to `.env`.
-After that, generate new secure key.
+Copy `.env.example` to `.env`, then generate a secure application key:
 
 ```
+cp .env.example .env
 node ace generate:key
 ```
 
-## Preparing database
+## Preparing the MySQL database
 
-Migrate database to create tables in SQLite database.
+The application requires MySQL 8.0. Start a local database with Docker:
+
+```
+docker run --name shopcore-mysql \
+  -e MYSQL_ROOT_PASSWORD=local_dev_password \
+  -e MYSQL_DATABASE=shopcore_test \
+  -p 3306:3306 \
+  -d mysql:8.0
+```
+
+Configure the MySQL connection in `.env` using `DB_HOST`, `DB_PORT`, `DB_USER`,
+`DB_PASSWORD`, and `DB_DATABASE`. For the Docker command above, use
+`127.0.0.1`, `3306`, `root`, `local_dev_password`, and `shopcore_test`,
+respectively. Wait until MySQL is ready before running database commands:
+
+```
+docker exec shopcore-mysql mysqladmin ping -h 127.0.0.1 -uroot -plocal_dev_password --silent
+```
+
+Run migrations to create the tables, then seed the example stock items:
 
 ```
 node ace migration:run
-```
-
-Next run
-
-```
 node ace db:seed
 ```
 
-to seed `stocks` table with example items.
+## Running tests locally
+
+Use the MySQL database above (or another MySQL 8.0 instance) and set the five
+database variables in `.env` to its connection details. The test bootstrap
+runs migrations and seeders before the suite:
+
+```
+npm test
+```
+
+The CI workflow uses the same `mysql:8.0` image and runs `npm test` against it.
+To remove the local test database container when finished, run
+`docker rm -f shopcore-mysql`.
 
 ## Launch development mode
 

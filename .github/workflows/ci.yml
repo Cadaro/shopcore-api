@@ -89,7 +89,6 @@ jobs:
           DB_USER: root
           DB_PASSWORD: ci_mysql_root_password
           DB_DATABASE: shopcore_test
-          DB_NAME: shopcore_test
         run: node ace migration:run --force
 
       - name: Run tests
@@ -106,7 +105,6 @@ jobs:
           DB_USER: root
           DB_PASSWORD: ci_mysql_root_password
           DB_DATABASE: shopcore_test
-          DB_NAME: shopcore_test
         run: npm test
 
       - name: Run tests with coverage
@@ -123,7 +121,6 @@ jobs:
           DB_USER: root
           DB_PASSWORD: ci_mysql_root_password
           DB_DATABASE: shopcore_test
-          DB_NAME: shopcore_test
         run: npm run test:coverage
 
       - name: Upload coverage to Codecov
