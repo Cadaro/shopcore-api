@@ -28,6 +28,8 @@ This platform is actively developed and expanding with new features to meet vari
 
 ## Installation
 
+Requires Node.js 24 or newer.
+
 ```
 git clone https://github.com/Cadaro/shopcore-api.git
 npm ci
