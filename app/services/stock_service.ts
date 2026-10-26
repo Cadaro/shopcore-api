@@ -11,25 +11,13 @@ import db from '@adonisjs/lucid/services/db';
 import { randomUUID } from 'crypto';
 import {
   ConflictException,
-  DomainRuleException,
+  InsufficientStockError,
   NotFoundException,
 } from '#exceptions/domain_exception';
+import type { TransactionClientContract } from '@adonisjs/lucid/types/database';
 
 export default class StockService {
   private stockDataMapper = new StockDataMapper();
-  async isStockAvailable(stocks: Array<ItemWithQty>) {
-    const foundStock = await Stock.query().whereIn(
-      'item_id',
-      stocks.map((s) => s.itemId)
-    );
-    for (const stock of stocks) {
-      const stockItem = foundStock.find((s) => s.itemId === stock.itemId);
-      if (!stockItem || stockItem.availableQty < stock.qty) {
-        return false;
-      }
-    }
-    return true;
-  }
 
   async fetchSingleStockItem(itemId: string) {
     const singleStock = await Stock.findBy({ itemId });
@@ -50,22 +38,17 @@ export default class StockService {
     return mappedStockItemSummary;
   }
 
-  async updateStock(items: Array<ItemWithQty>) {
-    const availableStock = await this.isStockAvailable(items);
-    if (!availableStock) {
-      throw new DomainRuleException('Stock is not available');
-    }
-    await db.transaction(async (trx) => {
-      for (const item of items) {
-        const stockItem = await Stock.findBy({ itemId: item.itemId }, { client: trx });
-        if (!stockItem) {
-          throw new NotFoundException(`Stock item ${item.itemId} not found`);
-        }
-        stockItem.availableQty -= item.qty;
-        stockItem.useTransaction(trx);
-        await stockItem.save();
+  async updateStock(items: Array<ItemWithQty>, trx: TransactionClientContract) {
+    for (const item of items) {
+      // Lucid wraps the affected-row count of write queries in an array
+      const [updatedRows] = await Stock.query({ client: trx })
+        .where('item_id', item.itemId)
+        .where('available_qty', '>=', item.qty)
+        .decrement('available_qty', item.qty);
+      if (!updatedRows) {
+        throw new InsufficientStockError(`Insufficient stock for item ${item.itemId}`);
       }
-    });
+    }
   }
 
   async createSingleItemStock(stock: StockItemCreateDto): Promise<StockItemCreatedDto> {
