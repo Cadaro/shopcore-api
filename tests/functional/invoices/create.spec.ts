@@ -14,9 +14,11 @@ import { DeliveryMethod } from '#types/enum/deliveryMethod';
 import { PaymentMethod } from '#types/enum/paymentMethod';
 import User from '#models/user';
 import { randomUUID } from 'crypto';
+import Stock from '#models/stock';
 
 test.group('Invoices create', (group) => {
   const orderService = new OrderService();
+  const invoiceTestItemId = randomUUID();
   let invoicePersonData: OrderInvoiceData;
   let invoiceCompanyData: OrderInvoiceData;
 
@@ -24,7 +26,7 @@ test.group('Invoices create', (group) => {
     const invoiceItems: Array<InvoiceItem> = [
       {
         priceCurrency: Currency.PLN,
-        itemId: '1234abc',
+        itemId: invoiceTestItemId,
         itemName: 'test item name',
         priceGross: 23.99,
         qty: 1,
@@ -84,6 +86,16 @@ test.group('Invoices create', (group) => {
       });
     };
     const user = await createUser();
+    await Stock.create({
+      itemId: invoiceTestItemId,
+      itemDescription: 'Invoice test item',
+      price: 23.99,
+      priceCurrency: Currency.PLN,
+      name: 'Invoice test item',
+      availableQty: 10,
+      vatAmount: 4.99,
+      vatRate: 0.23,
+    });
     const firstOrder = await orderService.createOrder(firstOrderReq, user.uuid);
     const secondOrder = await orderService.createOrder(secondOrderReq, user.uuid);
     invoicePersonData = {

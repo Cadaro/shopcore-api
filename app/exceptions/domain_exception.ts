@@ -28,6 +28,12 @@ export class ConflictException extends DomainException {
   }
 }
 
+export class InsufficientStockError extends DomainException {
+  constructor(message: string) {
+    super(message, 'INSUFFICIENT_STOCK', 409);
+  }
+}
+
 export class ForbiddenException extends DomainException {
   constructor(message: string, details?: ErrorDetail[]) {
     super(message, 'FORBIDDEN', 403, details);

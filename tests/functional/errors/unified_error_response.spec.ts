@@ -38,7 +38,7 @@ test.group('Unified error response', () => {
     assert.equal(body.code, 'FORBIDDEN');
   });
 
-  test('returns a standard domain-rule error', async ({ client, assert }) => {
+  test('returns a stable insufficient-stock conflict', async ({ client, assert }) => {
     const user = await new CreateUser(generateRoleUser()).create();
     const token = await new TokenService().createToken(user);
     const response = await client
@@ -47,9 +47,9 @@ test.group('Unified error response', () => {
       .json(orderCreateWithUnavailableStock);
     const body = response.body();
 
-    response.assertStatus(422);
+    response.assertStatus(409);
     assert.onlyProperties(body, ['code', 'message']);
-    assert.equal(body.code, 'DOMAIN_RULE_VIOLATION');
+    assert.equal(body.code, 'INSUFFICIENT_STOCK');
   });
 
   test('returns Vine validation failures as error details', async ({ client, assert }) => {

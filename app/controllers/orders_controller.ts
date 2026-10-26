@@ -6,17 +6,13 @@ import {
   OrderDataDto,
   OrderSummaryDto,
 } from '#types/order';
-import StockService from '#services/stock_service';
 import OrderService from '#services/order_service';
 import { inject } from '@adonisjs/core';
 import logger from '@adonisjs/core/services/logger';
 
 @inject()
 export default class OrdersController {
-  constructor(
-    private orderService: OrderService,
-    private stockService: StockService
-  ) {}
+  constructor(private orderService: OrderService) {}
 
   async index({ auth, response }: HttpContext) {
     // User middleware ensures authentication, so auth.user is guaranteed to exist
@@ -35,11 +31,6 @@ export default class OrdersController {
       createOrderDetailValidator
     );
 
-    logger.info(`Updating stock for order items`);
-    await this.stockService.updateStock(orderCreate.items);
-    logger.info(`Stock updated successfully`);
-
-    logger.info(`Proceeding to create order for user ${auth.user!.uuid}`);
     const createdOrder: OrderCreatedDto = await this.orderService.createOrder(
       orderCreate,
       auth.user!.uuid

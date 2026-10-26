@@ -11,9 +11,12 @@ import { OrderServiceBase } from '#types/interfaces/order/OrderServiceBase';
 import { DeliveryMethod } from '#types/enum/deliveryMethod';
 import logger from '@adonisjs/core/services/logger';
 import { NotFoundException } from '#exceptions/domain_exception';
+import StockService from '#services/stock_service';
 
 export default class OrderService implements OrderServiceBase {
   private orderDataMapper = new OrderDataMapper();
+  private stockService = new StockService();
+
   async fetchUserOrderList(userId: string): Promise<Array<OrderSummaryDto>> {
     const userOrderList = await Order.findManyBy({ userId });
     const userOrderSkus = await Promise.all(
@@ -36,6 +39,7 @@ export default class OrderService implements OrderServiceBase {
         this.orderDataMapper.mapOrderCreateRequestTypeToOrderWithDetailsModel(orderCreate);
       logger.info(`Mapped orderHeadWithDetails for order ${mappedOrder.orderHead.orderId}`);
 
+      await this.stockService.updateStock(orderCreate.items, trx);
       const savedOrderHead = await Order.create(
         { ...mappedOrder.orderHead, userId },
         { client: trx }
