@@ -1,8 +1,8 @@
-import { Currency } from '#types/enum/currencyCode';
-import { DeliveryMethod } from '#types/enum/deliveryMethod';
+import { Currency } from '#types/enum/currency_code';
+import { DeliveryMethod } from '#types/enum/delivery_method';
 import vine, { SimpleMessagesProvider } from '@vinejs/vine';
 import { Address } from '#validatorTypes/address';
-import { PaymentMethod } from '#types/enum/paymentMethod';
+import { PaymentMethod } from '#types/enum/payment_method';
 
 export const createOrderDetailValidator = vine.compile(
   vine.object({
