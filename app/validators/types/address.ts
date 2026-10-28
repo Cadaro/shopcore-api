@@ -1,5 +1,5 @@
 import { CountryCode } from '#types/enum/country_code';
-import { postalCodeForCountry } from '#validators/validatorTypes/postal_code_validator';
+import { postalCodeForCountry } from '#validators/types/postal_code_validator';
 import vine from '@vinejs/vine';
 
 export const Address = vine.object({
