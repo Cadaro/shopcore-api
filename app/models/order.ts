@@ -64,7 +64,7 @@ export default class Order extends BaseModel {
   declare paymentMethod: PaymentMethod;
 
   @column({ serializeAs: null })
-  declare userId: string;
+  declare userId: string | null;
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime;
