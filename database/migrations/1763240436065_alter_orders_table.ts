@@ -1,7 +1,7 @@
-import { Currency } from '#types/enum/currencyCode';
-import { DeliveryMethod } from '#types/enum/deliveryMethod';
-import { OrderStatus } from '#types/enum/orderStatus';
-import { PaymentMethod } from '#types/enum/paymentMethod';
+import { Currency } from '#types/enum/currency_code';
+import { DeliveryMethod } from '#types/enum/delivery_method';
+import { OrderStatus } from '#types/enum/order_status';
+import { PaymentMethod } from '#types/enum/payment_method';
 import { BaseSchema } from '@adonisjs/lucid/schema';
 
 export default class extends BaseSchema {

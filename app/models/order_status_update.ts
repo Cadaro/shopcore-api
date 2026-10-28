@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import { BaseModel, beforeFetch, column } from '@adonisjs/lucid/orm';
-import { type OrderStatus } from '#types/enum/orderStatus';
+import { type OrderStatus } from '#types/enum/order_status';
 import { type ModelQueryBuilderContract } from '@adonisjs/lucid/types/model';
 
 export default class OrderStatusUpdate extends BaseModel {

@@ -2,10 +2,10 @@ import { DateTime } from 'luxon';
 import { BaseModel, column, hasMany, hasOne } from '@adonisjs/lucid/orm';
 import OrderDetail from '#models/order_detail';
 import type { HasMany, HasOne } from '@adonisjs/lucid/types/relations';
-import { DeliveryMethod } from '#types/enum/deliveryMethod';
-import { Currency } from '#types/enum/currencyCode';
-import { OrderStatus } from '#types/enum/orderStatus';
-import { PaymentMethod } from '#types/enum/paymentMethod';
+import { DeliveryMethod } from '#types/enum/delivery_method';
+import { Currency } from '#types/enum/currency_code';
+import { OrderStatus } from '#types/enum/order_status';
+import { PaymentMethod } from '#types/enum/payment_method';
 import OrderDeliveryAddress from '#models/order_delivery_address';
 import { moneyColumn } from '#models/types/money';
 

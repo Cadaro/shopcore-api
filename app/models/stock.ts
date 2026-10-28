@@ -2,7 +2,7 @@ import { DateTime } from 'luxon';
 import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm';
 import StockPhoto from '#models/stock_photo';
 import type { HasMany } from '@adonisjs/lucid/types/relations';
-import { Currency } from '#types/enum/currencyCode';
+import { Currency } from '#types/enum/currency_code';
 import { moneyColumn } from '#models/types/money';
 
 export default class Stock extends BaseModel {

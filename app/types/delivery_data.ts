@@ -1,7 +1,7 @@
 import { Address } from '#types/address';
-import { Currency } from '#types/enum/currencyCode';
-import { DeliveryMethod } from '#types/enum/deliveryMethod';
-import { CountryCode } from './enum/countryCode.js';
+import { Currency } from '#types/enum/currency_code';
+import { DeliveryMethod } from '#types/enum/delivery_method';
+import { CountryCode } from './enum/country_code.js';
 
 export type DeliveryDataDto = {
   courier: string;
