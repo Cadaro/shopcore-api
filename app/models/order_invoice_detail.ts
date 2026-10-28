@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon';
 import { BaseModel, column } from '@adonisjs/lucid/orm';
 import { Currency } from '#types/enum/currencyCode';
+import { moneyColumn } from '#models/types/money';
 
 export default class OrderInvoiceDetail extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })
@@ -18,13 +19,13 @@ export default class OrderInvoiceDetail extends BaseModel {
   @column()
   declare qty: number;
 
-  @column()
+  @column(moneyColumn)
   declare priceGross: number;
 
   @column()
   declare priceCurrency: Currency;
 
-  @column()
+  @column(moneyColumn)
   declare vatAmount: number;
 
   @column()

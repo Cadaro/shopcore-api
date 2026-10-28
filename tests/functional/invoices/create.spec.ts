@@ -15,6 +15,9 @@ import { PaymentMethod } from '#types/enum/paymentMethod';
 import User from '#models/user';
 import { randomUUID } from 'crypto';
 import Stock from '#models/stock';
+import db from '@adonisjs/lucid/services/db';
+import OrderInvoiceDetail from '#models/order_invoice_detail';
+import { sumLineAmounts } from '#common/money';
 
 test.group('Invoices create', (group) => {
   const orderService = new OrderService();
@@ -29,7 +32,7 @@ test.group('Invoices create', (group) => {
         itemId: invoiceTestItemId,
         itemName: 'test item name',
         priceGross: 23.99,
-        qty: 1,
+        qty: 3,
         vatAmount: 4.99,
         vatRate: 0.23,
       },
@@ -147,6 +150,18 @@ test.group('Invoices create', (group) => {
     const result = await saveInvoiceService.save(invoicePersonData, invoiceNumberOptions);
     const invoiceNumberRegex = /^(FV) (0*[1-9]\d{0,3})\/(0?[1-9]|1[0-2])\/\d{4}$/;
     assert.match(result, invoiceNumberRegex);
+    const stored = await db.from('order_invoice_details').where('invoice_id', result).first();
+    assert.equal(Number(stored.price_gross), 2399);
+    assert.equal(Number(stored.vat_amount), 499);
+    const detail = await OrderInvoiceDetail.findByOrFail('invoiceId', result);
+    assert.equal(detail.priceGross, 23.99);
+    assert.equal(detail.vatAmount, 4.99);
+    assert.equal(sumLineAmounts([{ amount: detail.priceGross, qty: detail.qty }]), 71.97);
+    const summaries = await orderService.fetchUserOrderList(invoicePersonData.userId);
+    assert.equal(
+      summaries.find((summary) => summary.orderId === invoicePersonData.orderId)?.totalAmount,
+      71.97
+    );
   });
 
   test('create invoice order for type person with invoice number options, without month', async ({

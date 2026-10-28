@@ -14,6 +14,7 @@ import { DeliveryMethod } from '#types/enum/deliveryMethod';
 import logger from '@adonisjs/core/services/logger';
 import { Address } from '#types/address';
 import { DomainRuleException } from '#exceptions/domain_exception';
+import { sumLineAmounts } from '#common/money';
 
 export default class OrderDataMapper {
   mapOrderModelToOrderDataType(orderModel: Order): OrderDataDto {
@@ -107,7 +108,9 @@ export default class OrderDataMapper {
         );
       }
 
-      const totalAmount = order.details.reduce((sum, item) => sum + item.itemPrice * item.qty, 0);
+      const totalAmount = sumLineAmounts(
+        order.details.map((item) => ({ amount: item.itemPrice, qty: item.qty }))
+      );
       const itemsCount = order.details.reduce((count, item) => count + item.qty, 0);
       orderSummaries.push({
         orderId: order.orderId,

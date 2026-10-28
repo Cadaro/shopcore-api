@@ -12,6 +12,13 @@ info:
     The system supports the following European countries: AT, BE, CH, DE, DK, ES, FI, FR, GB, IE, IT, NL, NO, PL, PT, SE
     ## Supported Currencies
     The system supports the following European currencies which are related to supported countries: EUR, CHF, DKK, GBP, NOK, PLN, SEK
+
+    ## Money
+    Monetary fields are JSON numbers in major currency units, with at most two decimal places.
+    Internally they are stored as integer minor units (100 per major unit). Values converted
+    from greater precision and VAT calculations are rounded to the nearest minor unit, with
+    half values rounded away from zero. VAT rates are decimal fractions (0.23 means 23%).
+    Order summary totals cover item prices multiplied by quantities; delivery is not included.
   version: '1.0.0'
   contact:
     name: ShopCore API Support

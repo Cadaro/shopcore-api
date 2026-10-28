@@ -3,6 +3,7 @@ import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm';
 import StockPhoto from '#models/stock_photo';
 import type { HasMany } from '@adonisjs/lucid/types/relations';
 import { Currency } from '#types/enum/currencyCode';
+import { moneyColumn } from '#models/types/money';
 
 export default class Stock extends BaseModel {
   @hasMany(() => StockPhoto, { foreignKey: 'itemId', localKey: 'itemId' })
@@ -16,7 +17,7 @@ export default class Stock extends BaseModel {
   @column()
   declare itemDescription: string;
 
-  @column()
+  @column(moneyColumn)
   declare price: number;
 
   @column()
@@ -31,7 +32,7 @@ export default class Stock extends BaseModel {
   @column()
   declare availableQty: number;
 
-  @column()
+  @column(moneyColumn)
   declare vatAmount: number;
 
   @column()

@@ -84,6 +84,16 @@ The CI workflow uses the same `mysql:8.0` image and runs `npm test` against it.
 To remove the local test database container when finished, run
 `docker rm -f shopcore-mysql`.
 
+### Money storage migration
+
+Stop application writes while running or rolling back migrations: MySQL schema changes
+commit implicitly. Monetary columns use `DECIMAL(14,0)` minor units; API amounts remain
+major-unit JSON numbers with at most two decimal places. Conversion and VAT calculations
+round to the nearest minor unit, with ties away from zero. VAT rates are decimal fractions.
+The migration converts legacy two-decimal values; precision already lost in old float
+columns cannot be recovered. Rollback is rejected if amounts exceed the original column
+ranges. Back up the database before migrating.
+
 ## Launch development mode
 
 To start server in development mode, run

@@ -27,7 +27,7 @@ export const createOrderDetailValidator = vine.compile(
         .optional()
         .requiredWhen('method', '=', DeliveryMethod.PICKUP_POINT),
       additionalNote: vine.string().maxLength(50).optional(),
-      deliveryPrice: vine.number({ strict: true }).min(0),
+      deliveryPrice: vine.number({ strict: true }).min(0).decimal(2).max(999999999999.99),
       deliveryVatRate: vine.number({ strict: true }),
       deliveryCurrency: vine.enum(Currency),
     }),
@@ -38,9 +38,9 @@ export const createOrderDetailValidator = vine.compile(
           itemId: vine.string(),
           itemName: vine.string(),
           qty: vine.number({ strict: true }).positive().withoutDecimals(),
-          itemPrice: vine.number({ strict: true }).positive().decimal(2),
+          itemPrice: vine.number({ strict: true }).positive().decimal(2).max(999999999999.99),
           currency: vine.enum(Currency),
-          vatAmount: vine.number({ strict: true }).positive(),
+          vatAmount: vine.number({ strict: true }).positive().decimal(2).max(999999999999.99),
           vatRate: vine.number({ strict: true }).positive(),
         })
       )
