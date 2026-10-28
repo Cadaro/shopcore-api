@@ -3,11 +3,11 @@ import db from '@adonisjs/lucid/services/db';
 import PrepareInvoice from '#services/prepare_invoice_service';
 import OrderInvoice from '#models/order_invoice';
 import InvoiceNumber from '#models/invoice_number';
-import InvoiceDataMapper from '#mappers/invoice/InvoiceDataMapper';
+import InvoiceDataMapper from '#mappers/invoice/invoice_data_mapper';
 import OrderService from '#services/order_service';
 import { OrderDataDto } from '#types/order';
 import logger from '@adonisjs/core/services/logger';
-import { InvoiceBase } from '#types/interfaces/invoice/InvoiceBase';
+import { InvoiceBase } from '#types/interfaces/invoice/invoice_base';
 
 export default class SaveInvoice implements InvoiceBase {
   private orderService = new OrderService();

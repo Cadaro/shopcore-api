@@ -1,4 +1,4 @@
-import StockDataMapper from '#mappers/stock/StockDataMapper';
+import StockDataMapper from '#mappers/stock/stock_data_mapper';
 import Stock from '#models/stock';
 import {
   ItemWithQty,

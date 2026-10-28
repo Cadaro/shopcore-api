@@ -3,7 +3,7 @@ import { DateSuffix, InvoiceNumberOptions, PreparedInvoiceNumber } from '#types/
 import db from '@adonisjs/lucid/services/db';
 import { DateTime } from 'luxon';
 import string from '@adonisjs/core/helpers/string';
-import { InvoiceUtil } from '#types/interfaces/invoice/InvoiceUtil';
+import { InvoiceUtil } from '#types/interfaces/invoice/invoice_util';
 /**
  * Service class for preparing invoice numbers based on specified options.
  * Generates new invoice numbers by incrementing the current sequence and formatting it with
