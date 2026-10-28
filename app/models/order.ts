@@ -7,6 +7,7 @@ import { Currency } from '#types/enum/currencyCode';
 import { OrderStatus } from '#types/enum/orderStatus';
 import { PaymentMethod } from '#types/enum/paymentMethod';
 import OrderDeliveryAddress from '#models/order_delivery_address';
+import { moneyColumn } from '#models/types/money';
 
 export default class Order extends BaseModel {
   @hasMany(() => OrderDetail, { foreignKey: 'orderId', localKey: 'orderId' })
@@ -51,7 +52,7 @@ export default class Order extends BaseModel {
   @column()
   declare additionalNote?: string;
 
-  @column()
+  @column(moneyColumn)
   declare deliveryPrice: number;
 
   @column()
