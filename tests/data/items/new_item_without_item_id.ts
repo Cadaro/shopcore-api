@@ -1,4 +1,4 @@
-import { Currency } from '#types/enum/currencyCode';
+import { Currency } from '#types/enum/currency_code';
 import { StockItemCreateDto } from '#types/stock';
 
 export const newItemWithoutItemId: StockItemCreateDto = {

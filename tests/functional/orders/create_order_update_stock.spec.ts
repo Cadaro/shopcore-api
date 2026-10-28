@@ -1,14 +1,14 @@
 import { OrderCreatedDto } from '#types/order';
 import { test } from '@japa/runner';
-import { orderCreateWithAvailableStock } from '#tests/data/orders/orderCreateWithAvailableStock';
-import { orderCreateWithUnavailableStock } from '#tests/data/orders/orderCreateWithUnavailableStock';
+import { orderCreateWithAvailableStock } from '#tests/data/orders/order_create_with_available_stock';
+import { orderCreateWithUnavailableStock } from '#tests/data/orders/order_create_with_unavailable_stock';
 import TokenService from '#services/token_service';
 import { CreateUser } from '#tests/data/users/user';
-import { generateRoleUser } from '#tests/data/users/roleUser';
+import { generateRoleUser } from '#tests/data/users/role_user';
 import Order from '#models/order';
 import Stock from '#models/stock';
 import OrderService from '#services/order_service';
-import { Currency } from '#types/enum/currencyCode';
+import { Currency } from '#types/enum/currency_code';
 import { randomUUID } from 'crypto';
 
 test.group('Orders create for stock update', () => {

@@ -1,9 +1,9 @@
 import InvoiceCustomers from '#models/invoice_customer';
 import User from '#models/user';
 import TokenService from '#services/token_service';
-import { generateRoleUser } from '#tests/data/users/roleUser';
+import { generateRoleUser } from '#tests/data/users/role_user';
 import { CreateUser } from '#tests/data/users/user';
-import { CountryCode } from '#types/enum/countryCode';
+import { CountryCode } from '#types/enum/country_code';
 import { InvoiceCustomerData, InvoiceCustomerTypeEnum } from '#types/invoice';
 import { test } from '@japa/runner';
 
@@ -88,7 +88,7 @@ test.group('Customers invoice data update', (group) => {
 
     response.assertStatus(204);
     const invoiceDataAfterUpdate = await InvoiceCustomers.findBy('userId', userWithPersonData.uuid);
-    const mapper = new (await import('#mappers/invoice/InvoiceCustomerMapper')).default();
+    const mapper = new (await import('#mappers/invoice/invoice_customer_mapper')).default();
     const mappedData = mapper.mapInvoiceCustomerModelToInvoiceCustomerType(invoiceDataAfterUpdate!);
     assert.deepEqual(mappedData, invoiceDataToUpdate);
   });
@@ -120,7 +120,7 @@ test.group('Customers invoice data update', (group) => {
       userWithCompanyData.uuid
     );
 
-    const mapper = new (await import('#mappers/invoice/InvoiceCustomerMapper')).default();
+    const mapper = new (await import('#mappers/invoice/invoice_customer_mapper')).default();
     const mappedData = mapper.mapInvoiceCustomerModelToInvoiceCustomerType(invoiceDataAfterUpdate!);
 
     assert.deepEqual(mappedData, invoiceDataToUpdate);

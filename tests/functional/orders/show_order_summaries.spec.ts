@@ -2,8 +2,8 @@ import OrderService from '#services/order_service';
 import TokenService from '#services/token_service';
 import { OrderSummaryDto } from '#types/order';
 import { test } from '@japa/runner';
-import { orderCreatePickupPointCOD } from '#tests/data/orders/orderCreatePickupPointCOD';
-import { generateRoleUser } from '#tests/data/users/roleUser';
+import { orderCreatePickupPointCOD } from '#tests/data/orders/order_create_pickup_point_cod';
+import { generateRoleUser } from '#tests/data/users/role_user';
 import { CreateUser } from '#tests/data/users/user';
 import db from '@adonisjs/lucid/services/db';
 

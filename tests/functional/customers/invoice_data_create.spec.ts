@@ -1,8 +1,8 @@
 import InvoiceCustomers from '#models/invoice_customer';
 import TokenService from '#services/token_service';
-import { generateRoleUser } from '#tests/data/users/roleUser';
+import { generateRoleUser } from '#tests/data/users/role_user';
 import { CreateUser } from '#tests/data/users/user';
-import { CountryCode } from '#types/enum/countryCode';
+import { CountryCode } from '#types/enum/country_code';
 import {
   InvoiceCustomerData,
   InvoiceCustomerTypeEnum,
@@ -128,7 +128,7 @@ test.group('Customers invoice create', () => {
     const invoiceCustomersModel = await InvoiceCustomers.first();
     assert.isNotNull(invoiceCustomersModel, 'Invoice customer model should not be null');
 
-    const mapper = new (await import('#mappers/invoice/InvoiceCustomerMapper')).default();
+    const mapper = new (await import('#mappers/invoice/invoice_customer_mapper')).default();
     const mappedData = mapper.mapInvoiceCustomerModelToInvoiceCustomerType(invoiceCustomersModel!);
 
     assert.equal(mappedData.firstName, invoiceCustomersModel!.firstName);
@@ -159,7 +159,7 @@ test.group('Customers invoice create', () => {
         countryCode: CountryCode.PL,
       },
     };
-    const mapper = new (await import('#mappers/invoice/InvoiceCustomerMapper')).default();
+    const mapper = new (await import('#mappers/invoice/invoice_customer_mapper')).default();
 
     // Test mapping for person type
     const personModelData =

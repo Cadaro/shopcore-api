@@ -1,9 +1,9 @@
-import { Currency } from '#types/enum/currencyCode';
-import { DeliveryMethod } from '#types/enum/deliveryMethod';
-import { PaymentMethod } from '#types/enum/paymentMethod';
+import { Currency } from '#types/enum/currency_code';
+import { DeliveryMethod } from '#types/enum/delivery_method';
+import { PaymentMethod } from '#types/enum/payment_method';
 import { OrderCreateRequestDto } from '#types/order';
 
-export const orderCreatePickupPointCOD: OrderCreateRequestDto = {
+export const orderCreatePickupPointWithoutPPId: OrderCreateRequestDto = {
   firstName: 'John',
   lastName: 'Doe',
   email: 'john.doe@example.com',
@@ -11,7 +11,6 @@ export const orderCreatePickupPointCOD: OrderCreateRequestDto = {
   paymentMethod: PaymentMethod.CASH_ON_DELIVERY,
   delivery: {
     method: DeliveryMethod.PICKUP_POINT,
-    pickupPointId: 'pickup-123',
     courier: 'GLOBAL COURIER SERVICE',
     deliveryCurrency: Currency.CHF,
     deliveryPrice: 5.99,

@@ -1,10 +1,10 @@
 import User from '#models/user';
 import TokenService from '#services/token_service';
 import { test } from '@japa/runner';
-import { newItemWithoutItemId } from '../../data/items/newItemWithoutItemId.js';
-import { newItemWithItemId } from '../../data/items/newItemWithItemId.js';
-import { generateRoleUser } from '#tests/data/users/roleUser';
-import { generateRoleAdmin } from '#tests/data/users/roleAdmin';
+import { newItemWithoutItemId } from '../../data/items/new_item_without_item_id.js';
+import { newItemWithItemId } from '../../data/items/new_item_with_item_id.js';
+import { generateRoleUser } from '#tests/data/users/role_user';
+import { generateRoleAdmin } from '#tests/data/users/role_admin';
 import { CreateUser } from '#tests/data/users/user';
 import { StockItemCreatedDto } from '#types/stock';
 import db from '@adonisjs/lucid/services/db';

@@ -1,7 +1,7 @@
-import { CountryCode } from '#types/enum/countryCode';
-import { Currency } from '#types/enum/currencyCode';
-import { DeliveryMethod } from '#types/enum/deliveryMethod';
-import { PaymentMethod } from '#types/enum/paymentMethod';
+import { CountryCode } from '#types/enum/country_code';
+import { Currency } from '#types/enum/currency_code';
+import { DeliveryMethod } from '#types/enum/delivery_method';
+import { PaymentMethod } from '#types/enum/payment_method';
 import { OrderCreateRequestDto } from '#types/order';
 
 export const orderCreateDifferentItemAndDeliveryCurrency: OrderCreateRequestDto = {

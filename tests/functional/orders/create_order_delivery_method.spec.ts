@@ -1,9 +1,9 @@
 import { test } from '@japa/runner';
 import TokenService from '#services/token_service';
-import { orderCreatePickupPointWithoutPPId } from '#tests/data/orders/orderCreatePickupPointWithoutPPId';
-import { orderCreateHomeDeliveryWithoutAddress } from '#tests/data/orders/orderCreateHomeDeliveryWithoutAddress';
+import { orderCreatePickupPointWithoutPPId } from '#tests/data/orders/order_create_pickup_point_without_pp_id';
+import { orderCreateHomeDeliveryWithoutAddress } from '#tests/data/orders/order_create_home_delivery_without_address';
 import { CreateUser } from '#tests/data/users/user';
-import { generateRoleUser } from '#tests/data/users/roleUser';
+import { generateRoleUser } from '#tests/data/users/role_user';
 
 test.group('Orders create', () => {
   const tokenService = new TokenService();

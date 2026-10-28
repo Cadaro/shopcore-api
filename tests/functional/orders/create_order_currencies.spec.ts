@@ -1,9 +1,9 @@
 import { test } from '@japa/runner';
-import { orderCreateDifferentItemAndDeliveryCurrency } from '#tests/data/orders/orderCreateDifferentItemAndDeliveryCurrency';
+import { orderCreateDifferentItemAndDeliveryCurrency } from '#tests/data/orders/order_create_different_item_and_delivery_currency';
 import TokenService from '#services/token_service';
-import { orderCreateDifferentItemsCurrency } from '#tests/data/orders/orderCreateDifferentItemsCurrency';
+import { orderCreateDifferentItemsCurrency } from '#tests/data/orders/order_create_different_items_currency';
 import { CreateUser } from '#tests/data/users/user';
-import { generateRoleUser } from '#tests/data/users/roleUser';
+import { generateRoleUser } from '#tests/data/users/role_user';
 
 test.group('Orders create', () => {
   const tokenService = new TokenService();
