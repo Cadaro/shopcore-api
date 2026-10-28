@@ -2,9 +2,9 @@ import OrderService from '#services/order_service';
 import TokenService from '#services/token_service';
 import { OrderDataDto, OrderSummaryDto } from '#types/order';
 import { test } from '@japa/runner';
-import { orderCreatePickupPointCOD } from '#tests/data/orders/orderCreatePickupPointCOD';
+import { orderCreatePickupPointCOD } from '#tests/data/orders/order_create_pickup_point_cod';
 import { CreateUser } from '#tests/data/users/user';
-import { generateRoleUser } from '#tests/data/users/roleUser';
+import { generateRoleUser } from '#tests/data/users/role_user';
 
 test.group('Show Order Details', () => {
   const tokenService = new TokenService();

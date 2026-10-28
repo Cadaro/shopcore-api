@@ -5,11 +5,11 @@ import OrderDetail from '#models/order_detail';
 import Stock from '#models/stock';
 import db from '@adonisjs/lucid/services/db';
 import { CreateUser } from '#tests/data/users/user';
-import { generateRoleUser } from '#tests/data/users/roleUser';
-import { Currency } from '#types/enum/currencyCode';
-import { DeliveryMethod } from '#types/enum/deliveryMethod';
-import { OrderStatus } from '#types/enum/orderStatus';
-import { PaymentMethod } from '#types/enum/paymentMethod';
+import { generateRoleUser } from '#tests/data/users/role_user';
+import { Currency } from '#types/enum/currency_code';
+import { DeliveryMethod } from '#types/enum/delivery_method';
+import { OrderStatus } from '#types/enum/order_status';
+import { PaymentMethod } from '#types/enum/payment_method';
 
 test.group('Database integrity constraints', () => {
   const orderAttributes = (orderId: string, userId: string | null) => ({

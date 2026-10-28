@@ -1,6 +1,6 @@
-import InvoiceCustomerMapper from '#mappers/invoice/InvoiceCustomerMapper';
+import InvoiceCustomerMapper from '#mappers/invoice/invoice_customer_mapper';
 import InvoiceCustomers from '#models/invoice_customer';
-import { InvoiceCustomerBase } from '#types/interfaces/invoice/InvoiceCustomerBase';
+import { InvoiceCustomerBase } from '#types/interfaces/invoice/invoice_customer_base';
 import { InvoiceCustomerData, InvoiceCustomerWithUserId } from '#types/invoice';
 import db from '@adonisjs/lucid/services/db';
 import { ConflictException, NotFoundException } from '#exceptions/domain_exception';

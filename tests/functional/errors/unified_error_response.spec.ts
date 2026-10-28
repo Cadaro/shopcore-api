@@ -1,7 +1,7 @@
 import TokenService from '#services/token_service';
-import { generateRoleUser } from '#tests/data/users/roleUser';
+import { generateRoleUser } from '#tests/data/users/role_user';
 import { CreateUser } from '#tests/data/users/user';
-import { orderCreateWithUnavailableStock } from '#tests/data/orders/orderCreateWithUnavailableStock';
+import { orderCreateWithUnavailableStock } from '#tests/data/orders/order_create_with_unavailable_stock';
 import { test } from '@japa/runner';
 
 test.group('Unified error response', () => {

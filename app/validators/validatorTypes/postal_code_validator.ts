@@ -1,4 +1,4 @@
-import { CountryCode } from '#types/enum/countryCode';
+import { CountryCode } from '#types/enum/country_code';
 import vine from '@vinejs/vine';
 /**
  * Custom postal code validation that validates against the specific country code

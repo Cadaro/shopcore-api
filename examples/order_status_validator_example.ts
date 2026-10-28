@@ -2,8 +2,8 @@ import {
   OrderStatusValidatorService,
   OrderStatusValidationError,
 } from '#services/order_status_validator_service';
-import { DeliveryMethod } from '#types/enum/deliveryMethod';
-import { OrderStatus } from '#types/enum/orderStatus';
+import { DeliveryMethod } from '#types/enum/delivery_method';
+import { OrderStatus } from '#types/enum/order_status';
 
 /**
  * Example usage of the OrderStatusValidatorService

@@ -3,8 +3,8 @@ import {
   OrderStatusValidatorService,
   OrderStatusValidationError,
 } from '#services/order_status_validator_service';
-import { OrderStatus } from '#types/enum/orderStatus';
-import { DeliveryMethod } from '#types/enum/deliveryMethod';
+import { OrderStatus } from '#types/enum/order_status';
+import { DeliveryMethod } from '#types/enum/delivery_method';
 
 test.group('OrderStatusValidatorService', () => {
   test('should allow valid basic transitions', ({ assert }) => {

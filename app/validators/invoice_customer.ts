@@ -1,4 +1,4 @@
-import { CountryCode } from '#types/enum/countryCode';
+import { CountryCode } from '#types/enum/country_code';
 import { InvoiceCustomerTypeEnum } from '#types/invoice';
 import vine, { SimpleMessagesProvider } from '@vinejs/vine';
 import { Address } from '#validatorTypes/address';

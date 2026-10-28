@@ -7,10 +7,10 @@ import {
   OrderCreateRequestDto,
   OrderHeadDb,
 } from '#types/order';
-import { OrderStatus } from '#types/enum/orderStatus';
+import { OrderStatus } from '#types/enum/order_status';
 import { randomUUID } from 'crypto';
-import { DeliveryAddressDb } from '#types/deliveryData';
-import { DeliveryMethod } from '#types/enum/deliveryMethod';
+import { DeliveryAddressDb } from '#types/delivery_data';
+import { DeliveryMethod } from '#types/enum/delivery_method';
 import logger from '@adonisjs/core/services/logger';
 import { Address } from '#types/address';
 import { DomainRuleException } from '#exceptions/domain_exception';

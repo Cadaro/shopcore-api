@@ -1,5 +1,5 @@
 import Stock from '#models/stock';
-import { Currency } from '#types/enum/currencyCode';
+import { Currency } from '#types/enum/currency_code';
 import { BaseSeeder } from '@adonisjs/lucid/seeders';
 import { randomUUID } from 'crypto';
 

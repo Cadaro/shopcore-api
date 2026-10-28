@@ -1,9 +1,9 @@
 import InvoiceCustomers from '#models/invoice_customer';
 import User from '#models/user';
 import TokenService from '#services/token_service';
-import { generateRoleUser } from '#tests/data/users/roleUser';
+import { generateRoleUser } from '#tests/data/users/role_user';
 import { CreateUser } from '#tests/data/users/user';
-import { CountryCode } from '#types/enum/countryCode';
+import { CountryCode } from '#types/enum/country_code';
 import { InvoiceCustomerData, InvoiceCustomerTypeEnum } from '#types/invoice';
 import { test } from '@japa/runner';
 

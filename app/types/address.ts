@@ -1,4 +1,4 @@
-import { CountryCode } from '#types/enum/countryCode';
+import { CountryCode } from '#types/enum/country_code';
 
 export type Address = {
   streetName: string;

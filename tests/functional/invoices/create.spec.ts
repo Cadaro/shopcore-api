@@ -1,6 +1,6 @@
 import SaveInvoice from '#services/save_invoice_service';
 import OrderService from '#services/order_service';
-import { CountryCode } from '#types/enum/countryCode';
+import { CountryCode } from '#types/enum/country_code';
 import {
   InvoiceCustomerTypeEnum,
   InvoiceItem,
@@ -8,10 +8,10 @@ import {
   OrderInvoiceData,
 } from '#types/invoice';
 import { OrderCreateRequestDto, OrderSkuDto } from '#types/order';
-import { Currency } from '#types/enum/currencyCode';
+import { Currency } from '#types/enum/currency_code';
 import { test } from '@japa/runner';
-import { DeliveryMethod } from '#types/enum/deliveryMethod';
-import { PaymentMethod } from '#types/enum/paymentMethod';
+import { DeliveryMethod } from '#types/enum/delivery_method';
+import { PaymentMethod } from '#types/enum/payment_method';
 import User from '#models/user';
 import { randomUUID } from 'crypto';
 import Stock from '#models/stock';

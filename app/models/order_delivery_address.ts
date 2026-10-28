@@ -1,6 +1,6 @@
 import { DateTime } from 'luxon';
 import { BaseModel, column } from '@adonisjs/lucid/orm';
-import { CountryCode } from '#types/enum/countryCode';
+import { CountryCode } from '#types/enum/country_code';
 
 export default class OrderDeliveryAddress extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })

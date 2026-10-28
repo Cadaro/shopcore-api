@@ -6,9 +6,9 @@ import {
   OrderSummaryDto,
 } from '#types/order';
 import db from '@adonisjs/lucid/services/db';
-import OrderDataMapper from '#mappers/order/OrderDataMapper';
-import { OrderServiceBase } from '#types/interfaces/order/OrderServiceBase';
-import { DeliveryMethod } from '#types/enum/deliveryMethod';
+import OrderDataMapper from '#mappers/order/order_data_mapper';
+import { OrderServiceBase } from '#types/interfaces/order/order_service_base';
+import { DeliveryMethod } from '#types/enum/delivery_method';
 import logger from '@adonisjs/core/services/logger';
 import { NotFoundException } from '#exceptions/domain_exception';
 import StockService from '#services/stock_service';

@@ -1,9 +1,9 @@
 import { DateTime } from 'luxon';
-import { DeliveryDataDto } from '#types/deliveryData';
-import { DeliveryMethod } from '#types/enum/deliveryMethod';
-import { OrderStatus } from '#types/enum/orderStatus';
-import { Currency } from '#types/enum/currencyCode';
-import { PaymentMethod } from './enum/paymentMethod.js';
+import { DeliveryDataDto } from '#types/delivery_data';
+import { DeliveryMethod } from '#types/enum/delivery_method';
+import { OrderStatus } from '#types/enum/order_status';
+import { Currency } from '#types/enum/currency_code';
+import { PaymentMethod } from './enum/payment_method.js';
 
 /**
  * Represents a single SKU/item in an order.

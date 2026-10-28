@@ -1,5 +1,5 @@
-import { OrderStatus } from '#types/enum/orderStatus';
-import { DeliveryMethod } from '#types/enum/deliveryMethod';
+import { OrderStatus } from '#types/enum/order_status';
+import { DeliveryMethod } from '#types/enum/delivery_method';
 import { DomainRuleException } from '#exceptions/domain_exception';
 
 export class OrderStatusValidationError extends DomainRuleException {
