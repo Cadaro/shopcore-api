@@ -41,7 +41,7 @@
     "#config/*": "./config/*.js",
     "#types/*": "./app/types/*.js",
     "#mappers/*": "./app/mappers/*.js",
-    "#validatorTypes/*": "./app/validators/validatorTypes/*.js",
+    "#validator/types/*": "./app/validators/types/*.js",
     "#generated/*": "./.adonisjs/server/*.js"
   },
   "devDependencies": {

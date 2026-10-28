@@ -1,7 +1,7 @@
 import { CountryCode } from '#types/enum/country_code';
 import { InvoiceCustomerTypeEnum } from '#types/invoice';
 import vine, { SimpleMessagesProvider } from '@vinejs/vine';
-import { Address } from '#validatorTypes/address';
+import { Address } from '#validators/types/address';
 
 /**
  * Validator to validate the payload when creating invoice customer data
