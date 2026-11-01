@@ -10,6 +10,7 @@
 import { middleware } from './kernel.js';
 import router from '@adonisjs/core/services/router';
 import OrdersController from '#controllers/orders_controller';
+import OrderStatusController from '#controllers/order_status_controller';
 import TokenController from '#controllers/token_controller';
 import UsersController from '#controllers/users_controller';
 import StocksController from '#controllers/stocks_controller';
@@ -30,6 +31,9 @@ router
         .apiOnly()
         .only(['index', 'store', 'show'])
         .use(['index', 'store', 'show'], middleware.user());
+      router
+        .get('orders/:orderId/status-history', [OrderStatusController, 'history'])
+        .use(middleware.user());
       router
         .resource('customers/invoice-data', InvoiceCustomersController)
         .apiOnly()

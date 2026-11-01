@@ -50,7 +50,7 @@ test.group('Database integrity constraints', () => {
 
   test('rejects status updates for orders that do not exist', async ({ assert }) => {
     await assert.rejects(() =>
-      db.table('order_status_updates').insert({
+      db.table('order_histories').insert({
         order_id: randomUUID(),
         status: OrderStatus.NEW,
       })

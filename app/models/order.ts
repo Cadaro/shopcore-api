@@ -2,6 +2,7 @@ import { DateTime } from 'luxon';
 import { BaseModel, column, hasMany, hasOne } from '@adonisjs/lucid/orm';
 import OrderDetail from '#models/order_detail';
 import type { HasMany, HasOne } from '@adonisjs/lucid/types/relations';
+import OrderHistory from '#models/order_history';
 import { DeliveryMethod } from '#types/enum/delivery_method';
 import { Currency } from '#types/enum/currency_code';
 import { OrderStatus } from '#types/enum/order_status';
@@ -15,6 +16,9 @@ export default class Order extends BaseModel {
 
   @hasOne(() => OrderDeliveryAddress, { foreignKey: 'orderId', localKey: 'orderId' })
   declare deliveryAddress: HasOne<typeof OrderDeliveryAddress>;
+
+  @hasMany(() => OrderHistory, { foreignKey: 'orderId', localKey: 'orderId' })
+  declare history: HasMany<typeof OrderHistory>;
 
   @column({ isPrimary: true, serializeAs: null })
   declare id: number;

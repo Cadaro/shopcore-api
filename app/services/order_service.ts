@@ -12,10 +12,13 @@ import { DeliveryMethod } from '#types/enum/delivery_method';
 import logger from '@adonisjs/core/services/logger';
 import { NotFoundException } from '#exceptions/domain_exception';
 import StockService from '#services/stock_service';
+import OrderStatusService from '#services/order_status_service';
+import { DateTime } from 'luxon';
 
 export default class OrderService implements OrderServiceBase {
   private orderDataMapper = new OrderDataMapper();
   private stockService = new StockService();
+  private orderStatusService = new OrderStatusService();
 
   async fetchUserOrderList(userId: string): Promise<Array<OrderSummaryDto>> {
     const userOrderList = await Order.findManyBy({ userId });
@@ -70,6 +73,15 @@ export default class OrderService implements OrderServiceBase {
         throw new Error('Could not create new order');
       }
       logger.info(`Successfully created order ${savedOrderHead.orderId}`);
+      await this.orderStatusService.recordStatus(
+        {
+          orderId: savedOrderHead.orderId,
+          status: mappedOrder.orderHead.status,
+          statusDatetime: DateTime.now(),
+          isVisibleToCustomer: true,
+        },
+        trx
+      );
       return { orderId: savedOrderHead.orderId, details: savedOrderSku };
     });
 
