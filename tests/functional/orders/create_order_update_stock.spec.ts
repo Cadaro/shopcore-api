@@ -8,7 +8,6 @@ import { generateRoleUser } from '#tests/data/users/role_user';
 import Order from '#models/order';
 import Stock from '#models/stock';
 import OrderService from '#services/order_service';
-import { Currency } from '#types/enum/currency_code';
 import { randomUUID } from 'crypto';
 
 test.group('Orders create for stock update', () => {
@@ -23,8 +22,6 @@ test.group('Orders create for stock update', () => {
     Stock.create({
       itemId,
       itemDescription: 'Test item',
-      price: 7.99,
-      priceCurrency: Currency.EUR,
       name: 'Test item',
       size: 'M',
       availableQty,

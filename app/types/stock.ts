@@ -1,5 +1,10 @@
 import { Currency } from '#types/enum/currency_code';
 
+export type StockPriceDto = {
+  currency: Currency;
+  price: number;
+};
+
 type StockPhoto = {
   url: string;
   name?: string;
@@ -7,17 +12,17 @@ type StockPhoto = {
 
 export type StockItemSummaryDto = {
   itemId: string;
+  sku: string | null;
   name: string;
-  price: number;
-  priceCurrency: Currency;
+  prices: Array<StockPriceDto>;
   availableQty: number;
   thumbnail: StockPhoto;
 };
 
 export type StockItemDataDto = {
   itemId: string;
-  price: number;
-  priceCurrency: Currency;
+  sku: string | null;
+  prices: Array<StockPriceDto>;
   vatAmount: number;
   vatRate: number;
   name: string;
@@ -29,8 +34,8 @@ export type StockItemDataDto = {
 
 export type StockItemCreateDto = {
   itemId?: string;
-  price: number;
-  priceCurrency: Currency;
+  sku?: string;
+  prices: Array<StockPriceDto>;
   vatAmount: number;
   vatRate: number;
   name: string;
@@ -40,14 +45,16 @@ export type StockItemCreateDto = {
   photos: Array<StockPhoto>;
 };
 
+export type StockItemUpdateDto = Omit<StockItemCreateDto, 'itemId'>;
+
 export type StockItemCreatedDto = {
   itemId: string;
 };
 
 export type StockItemDb = {
   itemId: string;
-  price: number;
-  priceCurrency: Currency;
+  sku: string | null;
+  prices: Array<StockPriceDto>;
   vatAmount: number;
   vatRate: number;
   name: string;
