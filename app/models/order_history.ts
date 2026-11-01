@@ -1,9 +1,13 @@
 import { DateTime } from 'luxon';
-import { BaseModel, beforeFetch, column } from '@adonisjs/lucid/orm';
+import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm';
+import type { BelongsTo } from '@adonisjs/lucid/types/relations';
 import { type OrderStatus } from '#types/enum/order_status';
-import { type ModelQueryBuilderContract } from '@adonisjs/lucid/types/model';
+import Order from '#models/order';
 
-export default class OrderStatusUpdate extends BaseModel {
+export default class OrderHistory extends BaseModel {
+  @belongsTo(() => Order)
+  declare order: BelongsTo<typeof Order>;
+
   @column({ isPrimary: true, serializeAs: null })
   declare id: number;
 
@@ -13,14 +17,15 @@ export default class OrderStatusUpdate extends BaseModel {
   @column()
   declare status: OrderStatus;
 
+  @column()
+  declare isVisibleToCustomer: boolean;
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime;
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime;
 
-  @beforeFetch()
-  static async fetchLatestStatus(query: ModelQueryBuilderContract<typeof OrderStatusUpdate>) {
-    query.max('created_at');
-  }
+  @column.dateTime()
+  declare statusDatetime: DateTime;
 }
