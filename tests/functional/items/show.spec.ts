@@ -9,9 +9,9 @@ test.group('Items show', () => {
     assert.isArray(stocks);
     assert.onlyProperties(stocks[0], [
       'itemId',
+      'sku',
       'name',
-      'price',
-      'priceCurrency',
+      'prices',
       'availableQty',
       'thumbnail',
     ]);
@@ -26,15 +26,28 @@ test.group('Items show', () => {
     assert.isObject(singleStockItem);
     assert.onlyProperties(singleStockItem, [
       'itemId',
+      'sku',
       'itemDescription',
       'name',
-      'price',
-      'priceCurrency',
+      'prices',
       'vatAmount',
       'vatRate',
       'size',
       'availableQty',
       'photos',
     ]);
+    assert.isAtLeast(singleStockItem.prices.length, 1);
+  });
+
+  test('returns every currency price of a stock item', async ({ assert, client }) => {
+    const stocks: Array<StockItemSummaryDto> = (await client.get('/api/stocks')).body();
+    const multi = stocks.find((stock) => stock.sku === 'TEST-ITEM');
+    assert.isDefined(multi);
+    assert.deepEqual(multi!.prices, [
+      { currency: 'EUR', price: 9.99 },
+      { currency: 'PLN', price: 42.99 },
+    ]);
+    const detail = (await client.get(`/api/stocks/${multi!.itemId}`)).body();
+    assert.deepEqual(detail.prices, multi!.prices);
   });
 });

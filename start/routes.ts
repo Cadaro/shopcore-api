@@ -23,8 +23,8 @@ router
         .resource('stocks', StocksController)
         .params({ stocks: 'itemId' })
         .apiOnly()
-        .only(['index', 'show', 'store'])
-        .use(['store'], middleware.admin());
+        .only(['index', 'show', 'store', 'update'])
+        .use(['store', 'update'], middleware.admin());
       router
         .resource('orders', OrdersController)
         .params({ orders: 'orderId' })

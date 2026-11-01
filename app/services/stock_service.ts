@@ -6,6 +6,7 @@ import {
   StockItemCreateDto,
   StockItemDataDto,
   StockItemSummaryDto,
+  StockItemUpdateDto,
 } from '#types/stock';
 import db from '@adonisjs/lucid/services/db';
 import { randomUUID } from 'crypto';
@@ -24,15 +25,18 @@ export default class StockService {
     if (!singleStock) {
       throw new NotFoundException(`Stock item ${itemId} not found`);
     }
-    await singleStock!.load('photos');
+    await singleStock.load('photos');
+    await singleStock.load('prices', (query) => query.orderBy('id'));
     const mappedSingleStockItem: StockItemDataDto =
       this.stockDataMapper.mapStockModelToSingleStockItemDto(singleStock);
     return mappedSingleStockItem;
-    //
   }
 
   async fetchAvailableStock(): Promise<Array<StockItemSummaryDto>> {
-    const stocks = await Stock.query().where('available_qty', '>', 0).preload('photos');
+    const stocks = await Stock.query()
+      .where('available_qty', '>', 0)
+      .preload('photos')
+      .preload('prices', (query) => query.orderBy('id'));
     const mappedStockItemSummary: Array<StockItemSummaryDto> =
       this.stockDataMapper.mapStockModelToStockItemSummary(stocks);
     return mappedStockItemSummary;
@@ -57,17 +61,56 @@ export default class StockService {
     if (exists) {
       throw new ConflictException(`Stock item = ${stock.itemId} already exists`);
     }
+    if (stock.sku) {
+      const skuExists = await Stock.findBy({ sku: stock.sku });
+      if (skuExists) {
+        throw new ConflictException(`Stock sku = ${stock.sku} already exists`);
+      }
+    }
     const createdStockItemId = await db.transaction(async (trx) => {
       const stockModel = this.stockDataMapper.mapStockItemCreateDtoToStockModel(stock);
-      const savedStockHead = await Stock.create(stockModel, { client: trx });
-      const savedStockPhotos = await savedStockHead.related('photos').createMany(stockModel.photos);
+      const { photos, prices, ...stockHead } = stockModel;
+      const savedStockHead = await Stock.create(stockHead, { client: trx });
+      const savedStockPhotos = await savedStockHead.related('photos').createMany(photos);
+      const savedStockPrices = await savedStockHead.related('prices').createMany(prices);
 
-      if (!savedStockHead || !savedStockPhotos) {
+      if (!savedStockHead || !savedStockPhotos || !savedStockPrices) {
         throw new Error(`Could not create new stock item = ${stock.itemId}`);
       }
 
       return savedStockHead.itemId;
     });
     return { itemId: createdStockItemId };
+  }
+
+  async updateSingleItemStock(
+    itemId: string,
+    stock: StockItemUpdateDto
+  ): Promise<StockItemDataDto> {
+    return db.transaction(async (trx) => {
+      const stockModel = await Stock.findBy({ itemId }, { client: trx });
+      if (!stockModel) {
+        throw new NotFoundException(`Stock item ${itemId} not found`);
+      }
+
+      if (stock.sku) {
+        const skuExists = await Stock.findBy({ sku: stock.sku }, { client: trx });
+        if (skuExists && skuExists.id !== stockModel.id) {
+          throw new ConflictException(`Stock sku = ${stock.sku} already exists`);
+        }
+      }
+
+      const updatedStock = this.stockDataMapper.mapStockItemUpdateDtoToStockModel(itemId, stock);
+      const { photos, prices, ...stockAttributes } = updatedStock;
+      await stockModel.merge(stockAttributes).save();
+      await stockModel.related('photos').query().delete();
+      await stockModel.related('prices').query().delete();
+      await stockModel.related('photos').createMany(photos);
+      await stockModel.related('prices').createMany(prices);
+      await stockModel.load('photos');
+      await stockModel.load('prices', (query) => query.orderBy('id'));
+
+      return this.stockDataMapper.mapStockModelToSingleStockItemDto(stockModel);
+    });
   }
 }

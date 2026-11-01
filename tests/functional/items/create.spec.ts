@@ -7,6 +7,11 @@ import { generateRoleUser } from '#tests/data/users/role_user';
 import { generateRoleAdmin } from '#tests/data/users/role_admin';
 import { CreateUser } from '#tests/data/users/user';
 import { StockItemCreatedDto } from '#types/stock';
+import { randomUUID } from 'node:crypto';
+import Stock from '#models/stock';
+import StockPrice from '#models/stock_price';
+import StockService from '#services/stock_service';
+import { Currency } from '#types/enum/currency_code';
 import db from '@adonisjs/lucid/services/db';
 
 test.group('Items create', () => {
@@ -62,11 +67,21 @@ test.group('Items create', () => {
     const uuidV4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     assert.match(body.itemId, uuidV4Regex, 'itemId should be a valid UUID v4');
     const stored = await db.from('stocks').where('item_id', body.itemId).first();
-    assert.equal(Number(stored.price), 999);
     assert.equal(Number(stored.vat_amount), 209);
+    const storedPrices = await db.from('stock_prices').where('stock_id', stored.id).orderBy('id');
+    assert.deepEqual(
+      storedPrices.map((row) => [row.currency, Number(row.price)]),
+      [
+        ['EUR', 999],
+        ['PLN', 4299],
+      ]
+    );
     const show = await client.get(`/api/stocks/${body.itemId}`);
     show.assertStatus(200);
-    assert.equal(show.body().price, 9.99);
+    assert.deepEqual(show.body().prices, [
+      { currency: 'EUR', price: 9.99 },
+      { currency: 'PLN', price: 42.99 },
+    ]);
     assert.equal(show.body().vatAmount, 2.09);
   });
 
@@ -91,5 +106,115 @@ test.group('Items create', () => {
       newItemWithItemId.itemId,
       'itemId should match the provided one'
     );
+  });
+
+  test('rejects duplicate currencies and empty prices', async ({ assert, client }) => {
+    const admin = await new CreateUser(generateRoleAdmin()).create();
+    const token = await createTokenForUser(admin);
+    const duplicate = await client
+      .post('/api/stocks')
+      .json({
+        ...newItemWithoutItemId,
+        prices: [
+          { currency: Currency.EUR, price: 1 },
+          { currency: Currency.EUR, price: 2 },
+        ],
+      })
+      .bearerToken(token.token);
+    duplicate.assertStatus(422);
+    const empty = await client
+      .post('/api/stocks')
+      .json({ ...newItemWithoutItemId, prices: [] })
+      .bearerToken(token.token);
+    empty.assertStatus(422);
+    assert.isTrue(true);
+  });
+
+  test('stores sku and rejects a duplicate sku', async ({ assert, client }) => {
+    const admin = await new CreateUser(generateRoleAdmin()).create();
+    const token = await createTokenForUser(admin);
+    const sku = `SKU-${randomUUID()}`;
+    const first = await client
+      .post('/api/stocks')
+      .json({ ...newItemWithoutItemId, sku })
+      .bearerToken(token.token);
+    first.assertStatus(201);
+    const show = await client.get(`/api/stocks/${first.body().itemId}`);
+    assert.equal(show.body().sku, sku);
+    const second = await client
+      .post('/api/stocks')
+      .json({ ...newItemWithoutItemId, sku })
+      .bearerToken(token.token);
+    second.assertStatus(409);
+  });
+
+  test('replaces stock details and prices on update', async ({ assert, client }) => {
+    const admin = await new CreateUser(generateRoleAdmin()).create();
+    const token = await createTokenForUser(admin);
+    const itemId = randomUUID();
+    const initial = await client
+      .post('/api/stocks')
+      .json({ ...newItemWithoutItemId, itemId, sku: `SKU-${randomUUID()}` })
+      .bearerToken(token.token);
+    initial.assertStatus(201);
+
+    const replacement = {
+      ...newItemWithoutItemId,
+      sku: `SKU-${randomUUID()}`,
+      prices: [{ currency: Currency.DKK, price: 12.34 }],
+    };
+    const updated = await client
+      .put(`/api/stocks/${itemId}`)
+      .json(replacement)
+      .bearerToken(token.token);
+    updated.assertStatus(200);
+    assert.equal(updated.body().sku, replacement.sku);
+    assert.deepEqual(updated.body().prices, replacement.prices);
+
+    const invalidUpdate = await client
+      .put(`/api/stocks/${itemId}`)
+      .json({
+        ...replacement,
+        prices: [
+          { currency: Currency.DKK, price: 1 },
+          { currency: Currency.DKK, price: 2 },
+        ],
+      })
+      .bearerToken(token.token);
+    invalidUpdate.assertStatus(422);
+    const detail = await client.get(`/api/stocks/${itemId}`);
+    assert.deepEqual(detail.body().prices, replacement.prices);
+  });
+
+  test('rolls back the stock when a price insert fails', async ({ assert }) => {
+    const itemId = randomUUID();
+    await assert.rejects(() =>
+      new StockService().createSingleItemStock({
+        ...newItemWithoutItemId,
+        itemId,
+        prices: [
+          { currency: Currency.EUR, price: 1 },
+          { currency: Currency.EUR, price: 2 },
+        ],
+      })
+    );
+    assert.isNull(await db.from('stocks').where('item_id', itemId).first());
+  });
+
+  test('enforces one price per currency per stock in the database', async ({ assert }) => {
+    const itemId = randomUUID();
+    const stock = await Stock.create({
+      itemId,
+      itemDescription: 'Unique price test',
+      name: 'Unique price test',
+      availableQty: 1,
+      vatAmount: 0,
+      vatRate: 0,
+    });
+    await StockPrice.create({ stockId: stock.id, currency: Currency.EUR, price: 1 });
+    await assert.rejects(() =>
+      StockPrice.create({ stockId: stock.id, currency: Currency.EUR, price: 2 })
+    );
+    await StockPrice.create({ stockId: stock.id, currency: Currency.PLN, price: 2 });
   });
 });

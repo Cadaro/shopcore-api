@@ -92,8 +92,6 @@ test.group('Invoices create', (group) => {
     await Stock.create({
       itemId: invoiceTestItemId,
       itemDescription: 'Invoice test item',
-      price: 23.99,
-      priceCurrency: Currency.PLN,
       name: 'Invoice test item',
       availableQty: 10,
       vatAmount: 4.99,

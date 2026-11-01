@@ -64,8 +64,6 @@ test.group('Database integrity constraints', () => {
     await Stock.create({
       itemId,
       itemDescription: 'Integrity constraint test item',
-      price: 1,
-      priceCurrency: Currency.EUR,
       name: 'Integrity constraint test item',
       size: 'M',
       availableQty: 1,
@@ -92,8 +90,6 @@ test.group('Database integrity constraints', () => {
       Stock.create({
         itemId: randomUUID(),
         itemDescription: 'Invalid integrity constraint test item',
-        price: 1,
-        priceCurrency: Currency.EUR,
         name: 'Invalid integrity constraint test item',
         size: 'M',
         availableQty: -1,

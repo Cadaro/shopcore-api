@@ -4,16 +4,22 @@ import {
   StockItemDataDto,
   StockItemDb,
   StockItemSummaryDto,
+  StockPriceDto,
+  StockItemUpdateDto,
 } from '#types/stock';
 
 export default class StockDataMapper {
+  private mapPrices(stock: Stock): Array<StockPriceDto> {
+    return stock.prices.map((price) => ({ currency: price.currency, price: price.price }));
+  }
+
   mapStockModelToStockItemSummary(stockModel: Array<Stock>): Array<StockItemSummaryDto> {
     return stockModel.map((stock) => {
       return {
         itemId: stock.itemId,
         name: stock.name,
-        price: stock.price,
-        priceCurrency: stock.priceCurrency,
+        sku: stock.sku,
+        prices: this.mapPrices(stock),
         availableQty: stock.availableQty,
         thumbnail: stock.photos[0],
       };
@@ -22,8 +28,8 @@ export default class StockDataMapper {
   mapStockItemCreateDtoToStockModel(stockDto: StockItemCreateDto): StockItemDb {
     return {
       itemId: stockDto.itemId!,
-      price: stockDto.price,
-      priceCurrency: stockDto.priceCurrency,
+      sku: stockDto.sku ?? null,
+      prices: stockDto.prices,
       vatAmount: stockDto.vatAmount,
       vatRate: stockDto.vatRate,
       name: stockDto.name,
@@ -33,11 +39,16 @@ export default class StockDataMapper {
       photos: stockDto.photos,
     };
   }
+  mapStockItemUpdateDtoToStockModel(itemId: string, stockDto: StockItemUpdateDto): StockItemDb {
+    return {
+      ...this.mapStockItemCreateDtoToStockModel({ ...stockDto, itemId }),
+    };
+  }
   mapStockModelToSingleStockItemDto(stockModel: Stock): StockItemDataDto {
     return {
       itemId: stockModel.itemId,
-      price: stockModel.price,
-      priceCurrency: stockModel.priceCurrency,
+      sku: stockModel.sku,
+      prices: this.mapPrices(stockModel),
       vatAmount: stockModel.vatAmount,
       vatRate: stockModel.vatRate,
       name: stockModel.name,
