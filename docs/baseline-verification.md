@@ -2,6 +2,8 @@
 
 Verified on 2026-10-25. Nothing in the application, dependencies or configuration was changed; findings are reported, not fixed.
 
+Since this baseline, stock photos have been migrated from `stock_photos.item_id` to `stock_photos.stock_id`, referencing `stocks.id` with `ON DELETE CASCADE`. The schema details below record the baseline as verified on the date above.
+
 ## Environment
 
 | Item         | Value                                                                                                                                                                                            |
