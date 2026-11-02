@@ -98,4 +98,34 @@ test.group('Database integrity constraints', () => {
       })
     );
   });
+
+  test('deletes stock photos when their stock is deleted', async ({ assert }) => {
+    const stock = await Stock.create({
+      itemId: randomUUID(),
+      itemDescription: 'Stock photo cascade test',
+      name: 'Stock photo cascade test',
+      size: 'M',
+      availableQty: 1,
+      vatAmount: 0,
+      vatRate: 0,
+    });
+    const [photo] = await stock
+      .related('photos')
+      .createMany([{ url: '/stock-photo-cascade-test.jpg', name: 'Cascade test' }]);
+
+    assert.equal(photo.stockId, stock.id);
+    assert.equal(
+      Number(
+        (await db.from('stock_photos').where('stock_id', stock.id).count('* as count'))[0].count
+      ),
+      1
+    );
+    await stock.delete();
+    assert.equal(
+      Number(
+        (await db.from('stock_photos').where('stock_id', stock.id).count('* as count'))[0].count
+      ),
+      0
+    );
+  });
 });

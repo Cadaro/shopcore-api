@@ -6,7 +6,7 @@ import StockPrice from '#models/stock_price';
 import { moneyColumn } from '#models/types/money';
 
 export default class Stock extends BaseModel {
-  @hasMany(() => StockPhoto, { foreignKey: 'itemId', localKey: 'itemId' })
+  @hasMany(() => StockPhoto, { foreignKey: 'stockId', localKey: 'id' })
   declare photos: HasMany<typeof StockPhoto>;
   @hasMany(() => StockPrice, { foreignKey: 'stockId', localKey: 'id' })
   declare prices: HasMany<typeof StockPrice>;

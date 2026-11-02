@@ -1,12 +1,17 @@
 import { DateTime } from 'luxon';
-import { BaseModel, column } from '@adonisjs/lucid/orm';
+import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm';
+import Stock from '#models/stock';
+import type { BelongsTo } from '@adonisjs/lucid/types/relations';
 
 export default class StockPhoto extends BaseModel {
+  @belongsTo(() => Stock, { foreignKey: 'stockId', localKey: 'id' })
+  declare stock: BelongsTo<typeof Stock>;
+
   @column({ isPrimary: true, serializeAs: null })
   declare id: number;
 
   @column({ serializeAs: null })
-  declare itemId: string;
+  declare stockId: number;
 
   @column()
   declare url: string;

@@ -68,6 +68,11 @@ test.group('Items create', () => {
     assert.match(body.itemId, uuidV4Regex, 'itemId should be a valid UUID v4');
     const stored = await db.from('stocks').where('item_id', body.itemId).first();
     assert.equal(Number(stored.vat_amount), 209);
+    const storedPhotos = await db.from('stock_photos').where('stock_id', stored.id);
+    assert.deepEqual(
+      storedPhotos.map((photo) => [photo.url, photo.name]),
+      [['../some/path/to/photo', 'photo of nice t-shirt']]
+    );
     const storedPrices = await db.from('stock_prices').where('stock_id', stored.id).orderBy('id');
     assert.deepEqual(
       storedPrices.map((row) => [row.currency, Number(row.price)]),
@@ -170,6 +175,12 @@ test.group('Items create', () => {
     updated.assertStatus(200);
     assert.equal(updated.body().sku, replacement.sku);
     assert.deepEqual(updated.body().prices, replacement.prices);
+    const storedStock = await db.from('stocks').where('item_id', itemId).first();
+    const storedPhotos = await db.from('stock_photos').where('stock_id', storedStock.id);
+    assert.deepEqual(
+      storedPhotos.map((photo) => [photo.url, photo.name]),
+      replacement.photos.map((photo) => [photo.url, photo.name])
+    );
 
     const invalidUpdate = await client
       .put(`/api/stocks/${itemId}`)
