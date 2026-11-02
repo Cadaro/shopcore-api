@@ -42,7 +42,13 @@ test.group('Items create', () => {
     const token = await createTokenForUser(admin);
     const response = await client
       .post('/api/stocks')
-      .json({ ...newItemWithoutItemId, vatAmount: 0.001 })
+      .json({
+        ...newItemWithoutItemId,
+        prices: [
+          { ...newItemWithoutItemId.prices[0], vatAmount: 0.001 },
+          ...newItemWithoutItemId.prices.slice(1),
+        ],
+      })
       .bearerToken(token.token);
     response.assertStatus(422);
   });
@@ -67,7 +73,6 @@ test.group('Items create', () => {
     const uuidV4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     assert.match(body.itemId, uuidV4Regex, 'itemId should be a valid UUID v4');
     const stored = await db.from('stocks').where('item_id', body.itemId).first();
-    assert.equal(Number(stored.vat_amount), 209);
     const storedPhotos = await db.from('stock_photos').where('stock_id', stored.id);
     assert.deepEqual(
       storedPhotos.map((photo) => [photo.url, photo.name]),
@@ -81,13 +86,32 @@ test.group('Items create', () => {
         ['PLN', 4299],
       ]
     );
+    assert.deepEqual(
+      storedPrices.map((row) => [row.currency, Number(row.vat_amount), Number(row.vat_rate)]),
+      [
+        ['EUR', 209, 0.21],
+        ['PLN', 902, 0.23],
+      ]
+    );
     const show = await client.get(`/api/stocks/${body.itemId}`);
     show.assertStatus(200);
     assert.deepEqual(show.body().prices, [
-      { currency: 'EUR', price: 9.99 },
-      { currency: 'PLN', price: 42.99 },
+      { currency: 'EUR', price: 9.99, vatAmount: 2.09, vatRate: 0.21 },
+      { currency: 'PLN', price: 42.99, vatAmount: 9.02, vatRate: 0.23 },
     ]);
-    assert.equal(show.body().vatAmount, 2.09);
+    assert.deepEqual(
+      show
+        .body()
+        .prices.map((price: { currency: Currency; vatAmount: number; vatRate: number }) => [
+          price.currency,
+          price.vatAmount,
+          price.vatRate,
+        ]),
+      [
+        [Currency.EUR, 2.09, 0.21],
+        [Currency.PLN, 9.02, 0.23],
+      ]
+    );
   });
 
   test('should create a new item by role admin with provided itemId', async ({
@@ -166,7 +190,10 @@ test.group('Items create', () => {
     const replacement = {
       ...newItemWithoutItemId,
       sku: `SKU-${randomUUID()}`,
-      prices: [{ currency: Currency.DKK, price: 12.34 }],
+      prices: [
+        { currency: Currency.DKK, price: 12.34, vatAmount: 2.34, vatRate: 0.19 },
+        { currency: Currency.EUR, price: 8.76, vatAmount: 1.76, vatRate: 0.21 },
+      ],
     };
     const updated = await client
       .put(`/api/stocks/${itemId}`)
@@ -204,8 +231,8 @@ test.group('Items create', () => {
         ...newItemWithoutItemId,
         itemId,
         prices: [
-          { currency: Currency.EUR, price: 1 },
-          { currency: Currency.EUR, price: 2 },
+          { currency: Currency.EUR, price: 1, vatAmount: 0, vatRate: 0 },
+          { currency: Currency.EUR, price: 2, vatAmount: 0, vatRate: 0 },
         ],
       })
     );
@@ -219,13 +246,29 @@ test.group('Items create', () => {
       itemDescription: 'Unique price test',
       name: 'Unique price test',
       availableQty: 1,
+    });
+    await StockPrice.create({
+      stockId: stock.id,
+      currency: Currency.EUR,
+      price: 1,
       vatAmount: 0,
       vatRate: 0,
     });
-    await StockPrice.create({ stockId: stock.id, currency: Currency.EUR, price: 1 });
     await assert.rejects(() =>
-      StockPrice.create({ stockId: stock.id, currency: Currency.EUR, price: 2 })
+      StockPrice.create({
+        stockId: stock.id,
+        currency: Currency.EUR,
+        price: 2,
+        vatAmount: 0,
+        vatRate: 0,
+      })
     );
-    await StockPrice.create({ stockId: stock.id, currency: Currency.PLN, price: 2 });
+    await StockPrice.create({
+      stockId: stock.id,
+      currency: Currency.PLN,
+      price: 2,
+      vatAmount: 0,
+      vatRate: 0,
+    });
   });
 });

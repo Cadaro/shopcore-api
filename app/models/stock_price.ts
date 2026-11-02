@@ -21,6 +21,12 @@ export default class StockPrice extends BaseModel {
   @column(moneyColumn)
   declare price: number;
 
+  @column(moneyColumn)
+  declare vatAmount: number;
+
+  @column()
+  declare vatRate: number;
+
   @column.dateTime({ autoCreate: true, serializeAs: null })
   declare createdAt: DateTime;
 

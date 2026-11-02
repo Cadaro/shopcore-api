@@ -30,8 +30,6 @@ test.group('Items show', () => {
       'itemDescription',
       'name',
       'prices',
-      'vatAmount',
-      'vatRate',
       'size',
       'availableQty',
       'photos',
@@ -44,8 +42,8 @@ test.group('Items show', () => {
     const multi = stocks.find((stock) => stock.sku === 'TEST-ITEM');
     assert.isDefined(multi);
     assert.deepEqual(multi!.prices, [
-      { currency: 'EUR', price: 9.99 },
-      { currency: 'PLN', price: 42.99 },
+      { currency: 'EUR', price: 9.99, vatAmount: 2.53, vatRate: 0.19 },
+      { currency: 'PLN', price: 42.99, vatAmount: 2.53, vatRate: 0.19 },
     ]);
     const detail = (await client.get(`/api/stocks/${multi!.itemId}`)).body();
     assert.deepEqual(detail.prices, multi!.prices);

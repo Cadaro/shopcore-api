@@ -347,10 +347,12 @@ components:
 
     StockPrice:
       type: object
-      description: Gross price of a stock item in one currency. No currency conversion is performed.
+      description: Price and VAT of a stock item in one currency. No currency conversion is performed.
       required:
         - currency
         - price
+        - vatAmount
+        - vatRate
       properties:
         currency:
           $ref: '#/components/schemas/CurrencyCode'
@@ -358,6 +360,14 @@ components:
           type: number
           format: double
           description: 'gross price'
+        vatAmount:
+          type: number
+          format: double
+          description: 'VAT amount for this currency price'
+        vatRate:
+          type: number
+          format: double
+          description: 'VAT rate as a decimal fraction, for example 0.23 as 23%'
 
     StockItemSummaryDto:
       type: object
@@ -392,12 +402,6 @@ components:
           description: One price per currency
           items:
             $ref: '#/components/schemas/StockPrice'
-        vatAmount:
-          type: number
-          format: double
-        vatRate:
-          type: number
-          format: double
         name:
           type: string
         itemDescription:
@@ -416,8 +420,6 @@ components:
       type: object
       required:
         - prices
-        - vatAmount
-        - vatRate
         - name
         - itemDescription
         - availableQty
@@ -436,14 +438,6 @@ components:
           description: 'gross prices, at most one per currency'
           items:
             $ref: '#/components/schemas/StockPrice'
-        vatAmount:
-          type: number
-          format: double
-          description: 'vat amount of item price'
-        vatRate:
-          type: number
-          format: double
-          description: 'vat rate for example 0.23 as 23%'
         name:
           type: string
           description: 'item name for example blue t-shirt'
@@ -467,10 +461,12 @@ components:
         prices:
           - currency: 'PLN'
             price: 29.99
+            vatAmount: 5.98
+            vatRate: 0.23
           - currency: 'EUR'
             price: 6.99
-        vatAmount: 5.98
-        vatRate: 0.23
+            vatAmount: 1.39
+            vatRate: 0.23
         name: 'Blue T-Shirt'
         itemDescription: 'Comfortable cotton t-shirt in blue color'
         size: 'XL'

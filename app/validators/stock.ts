@@ -8,6 +8,8 @@ const stockFields = {
       vine.object({
         currency: vine.enum(Currency),
         price: vine.number({ strict: true }).positive().decimal(2).min(0.01).max(999999999999.99),
+        vatRate: vine.number({ strict: true }).positive(),
+        vatAmount: vine.number({ strict: true }).positive().decimal(2).max(999999999999.99),
       })
     )
     .minLength(1)
@@ -15,8 +17,6 @@ const stockFields = {
   name: vine.string().minLength(3).maxLength(100),
   itemDescription: vine.string().minLength(3).maxLength(4000),
   availableQty: vine.number({ strict: true }).positive().withoutDecimals(),
-  vatRate: vine.number({ strict: true }).positive(),
-  vatAmount: vine.number({ strict: true }).positive().decimal(2).max(999999999999.99),
   photos: vine.array(
     vine.object({
       url: vine.string(),

@@ -3,6 +3,8 @@ import { Currency } from '#types/enum/currency_code';
 export type StockPriceDto = {
   currency: Currency;
   price: number;
+  vatAmount: number;
+  vatRate: number;
 };
 
 type StockPhoto = {
@@ -23,8 +25,6 @@ export type StockItemDataDto = {
   itemId: string;
   sku: string | null;
   prices: Array<StockPriceDto>;
-  vatAmount: number;
-  vatRate: number;
   name: string;
   itemDescription: string;
   size?: string;
@@ -36,8 +36,6 @@ export type StockItemCreateDto = {
   itemId?: string;
   sku?: string;
   prices: Array<StockPriceDto>;
-  vatAmount: number;
-  vatRate: number;
   name: string;
   itemDescription: string;
   size?: string;
@@ -55,8 +53,6 @@ export type StockItemDb = {
   itemId: string;
   sku: string | null;
   prices: Array<StockPriceDto>;
-  vatAmount: number;
-  vatRate: number;
   name: string;
   itemDescription: string;
   size?: string;
