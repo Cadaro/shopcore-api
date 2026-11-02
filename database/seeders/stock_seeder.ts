@@ -12,12 +12,10 @@ export default class extends BaseSeeder {
       itemDescription: 'It is a nice test item, very soft. Pls buy me.',
       name: 'Test item',
       availableQty: 99,
-      vatAmount: 2.53,
-      vatRate: 0.19,
     });
     await first.related('prices').createMany([
-      { currency: Currency.EUR, price: 9.99 },
-      { currency: Currency.PLN, price: 42.99 },
+      { currency: Currency.EUR, price: 9.99, vatAmount: 2.53, vatRate: 0.19 },
+      { currency: Currency.PLN, price: 42.99, vatAmount: 2.53, vatRate: 0.19 },
     ]);
     await first.related('photos').createMany([{ url: '/path/to/photo.jpg', name: 'photo' }]);
 
@@ -28,10 +26,10 @@ export default class extends BaseSeeder {
       name: 'blue t-shirt',
       size: 'M',
       availableQty: 72,
-      vatAmount: 2.21,
-      vatRate: 0.19,
     });
-    await second.related('prices').createMany([{ currency: Currency.EUR, price: 7.99 }]);
+    await second
+      .related('prices')
+      .createMany([{ currency: Currency.EUR, price: 7.99, vatAmount: 2.21, vatRate: 0.19 }]);
     await second
       .related('photos')
       .createMany([{ url: '/path/to/photo1.jpg', name: 'photo1' }, { url: '/path/to/photo2.jpg' }]);
@@ -43,10 +41,10 @@ export default class extends BaseSeeder {
       name: 'blue t-shirt',
       size: 'M',
       availableQty: 72,
-      vatAmount: 2.21,
-      vatRate: 0.19,
     });
-    await third.related('prices').createMany([{ currency: Currency.CHF, price: 7.99 }]);
+    await third
+      .related('prices')
+      .createMany([{ currency: Currency.CHF, price: 7.99, vatAmount: 2.21, vatRate: 0.19 }]);
     await third
       .related('photos')
       .createMany([{ url: '/path/to/photo1.jpg', name: 'photo1' }, { url: '/path/to/photo2.jpg' }]);

@@ -94,8 +94,6 @@ test.group('Invoices create', (group) => {
       itemDescription: 'Invoice test item',
       name: 'Invoice test item',
       availableQty: 10,
-      vatAmount: 4.99,
-      vatRate: 0.23,
     });
     const firstOrder = await orderService.createOrder(firstOrderReq, user.uuid);
     const secondOrder = await orderService.createOrder(secondOrderReq, user.uuid);

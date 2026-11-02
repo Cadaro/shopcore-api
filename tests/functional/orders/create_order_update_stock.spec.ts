@@ -25,8 +25,6 @@ test.group('Orders create for stock update', () => {
       name: 'Test item',
       size: 'M',
       availableQty,
-      vatAmount: 1.43,
-      vatRate: 0.19,
     });
 
   test('should create order with available stock', async ({ client, assert }) => {

@@ -10,7 +10,12 @@ import {
 
 export default class StockDataMapper {
   private mapPrices(stock: Stock): Array<StockPriceDto> {
-    return stock.prices.map((price) => ({ currency: price.currency, price: price.price }));
+    return stock.prices.map((price) => ({
+      currency: price.currency,
+      price: price.price,
+      vatAmount: price.vatAmount,
+      vatRate: price.vatRate,
+    }));
   }
 
   mapStockModelToStockItemSummary(stockModel: Array<Stock>): Array<StockItemSummaryDto> {
@@ -30,8 +35,6 @@ export default class StockDataMapper {
       itemId: stockDto.itemId!,
       sku: stockDto.sku ?? null,
       prices: stockDto.prices,
-      vatAmount: stockDto.vatAmount,
-      vatRate: stockDto.vatRate,
       name: stockDto.name,
       itemDescription: stockDto.itemDescription,
       size: stockDto.size,
@@ -49,8 +52,6 @@ export default class StockDataMapper {
       itemId: stockModel.itemId,
       sku: stockModel.sku,
       prices: this.mapPrices(stockModel),
-      vatAmount: stockModel.vatAmount,
-      vatRate: stockModel.vatRate,
       name: stockModel.name,
       itemDescription: stockModel.itemDescription,
       size: stockModel.size,

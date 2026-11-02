@@ -67,8 +67,6 @@ test.group('Database integrity constraints', () => {
       name: 'Integrity constraint test item',
       size: 'M',
       availableQty: 1,
-      vatAmount: 0,
-      vatRate: 0,
     });
     const detail = {
       orderId: order.orderId,
@@ -93,8 +91,6 @@ test.group('Database integrity constraints', () => {
         name: 'Invalid integrity constraint test item',
         size: 'M',
         availableQty: -1,
-        vatAmount: 0,
-        vatRate: 0,
       })
     );
   });
@@ -106,8 +102,6 @@ test.group('Database integrity constraints', () => {
       name: 'Stock photo cascade test',
       size: 'M',
       availableQty: 1,
-      vatAmount: 0,
-      vatRate: 0,
     });
     const [photo] = await stock
       .related('photos')

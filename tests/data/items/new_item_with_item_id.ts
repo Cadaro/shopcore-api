@@ -5,11 +5,9 @@ export const newItemWithItemId: StockItemCreateDto = {
   itemId: 'test-item-123',
   itemDescription: 'It is a nice test item, very soft. Pls buy me.',
   name: 'Test item',
-  vatAmount: 2.09,
-  vatRate: 0.21,
   prices: [
-    { currency: Currency.EUR, price: 9.99 },
-    { currency: Currency.PLN, price: 42.99 },
+    { currency: Currency.EUR, price: 9.99, vatAmount: 2.09, vatRate: 0.21 },
+    { currency: Currency.PLN, price: 42.99, vatAmount: 9.02, vatRate: 0.23 },
   ],
   size: 'M',
   availableQty: 10,

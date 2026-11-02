@@ -3,7 +3,6 @@ import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm';
 import StockPhoto from '#models/stock_photo';
 import type { HasMany } from '@adonisjs/lucid/types/relations';
 import StockPrice from '#models/stock_price';
-import { moneyColumn } from '#models/types/money';
 
 export default class Stock extends BaseModel {
   @hasMany(() => StockPhoto, { foreignKey: 'stockId', localKey: 'id' })
@@ -30,12 +29,6 @@ export default class Stock extends BaseModel {
 
   @column()
   declare availableQty: number;
-
-  @column(moneyColumn)
-  declare vatAmount: number;
-
-  @column()
-  declare vatRate: number;
 
   @column.dateTime({ autoCreate: true, serializeAs: null })
   declare createdAt: DateTime;
