@@ -4,7 +4,7 @@ import { compose } from '@adonisjs/core/helpers';
 import { BaseModel, column } from '@adonisjs/lucid/orm';
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid';
 import { AccessToken, DbAccessTokensProvider } from '@adonisjs/auth/access_tokens';
-import { UserRolesEnum } from '#types/user';
+import { Role } from '#types/enum/role';
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -39,7 +39,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare uuid: string;
 
   @column()
-  declare role: UserRolesEnum;
+  declare role: Role;
 
   static accessTokens = DbAccessTokensProvider.forModel(User, {
     expiresIn: '24h',

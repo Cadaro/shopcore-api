@@ -1,10 +1,11 @@
 import User from '#models/user';
-import { UserCreateDb, UserRolesEnum } from '#types/user';
+import { UserCreateDb } from '#types/user';
+import { Role } from '#types/enum/role';
 
 export class CreateUser {
   private email: string;
   private password: string;
-  private role: UserRolesEnum;
+  private role: Role;
   private uuid: string;
 
   constructor(newUser: UserCreateDb) {

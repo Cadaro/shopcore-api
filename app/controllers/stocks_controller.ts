@@ -32,7 +32,7 @@ export default class StocksController {
   }
 
   async store({ request, response }: HttpContext) {
-    // Admin middleware ensures only admins can reach this point
+    // Permission middleware ensures only staff and admins can reach this point
     const singleStockItem: StockItemCreateDto = await request.validateUsing(createStockValidator);
     const createdSingleStockItemId: StockItemCreatedDto =
       await this.stockService.createSingleItemStock(singleStockItem);

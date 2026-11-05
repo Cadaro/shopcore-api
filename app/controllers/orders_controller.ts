@@ -15,7 +15,7 @@ export default class OrdersController {
 
   async index({ auth, request, response }: HttpContext) {
     const pagination = await request.validateUsing(paginationValidator, { data: request.qs() });
-    // User middleware ensures authentication, so auth.user is guaranteed to exist
+    // Permission middleware ensures authentication, so auth.user is guaranteed to exist
     logger.info(`Fetching order list for user ${auth.user!.uuid}`);
     const orderSummaries = await this.orderService.fetchUserOrderPage(auth.user!.uuid, pagination);
     logger.info(`Fetched ${orderSummaries.data.length} orders for user ${auth.user!.uuid}`);
@@ -23,7 +23,7 @@ export default class OrdersController {
   }
 
   async store({ auth, request, response }: HttpContext) {
-    // User middleware ensures authentication, so auth.user is guaranteed to exist
+    // Permission middleware ensures authentication, so auth.user is guaranteed to exist
     logger.info(`Creating order for user ${auth.user!.uuid}`);
     const orderCreate: OrderCreateRequestDto = await request.validateUsing(
       createOrderDetailValidator
@@ -38,7 +38,7 @@ export default class OrdersController {
   }
 
   async show({ auth, params, response }: HttpContext) {
-    // User middleware ensures authentication, so auth.user is guaranteed to exist
+    // Permission middleware ensures authentication, so auth.user is guaranteed to exist
     logger.info(`Fetching order ${params.orderId} for user ${auth.user!.uuid}`);
     const orderData: OrderDataDto = await this.orderService.fetchUserSingleOrder(
       params.orderId,

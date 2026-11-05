@@ -1,19 +1,17 @@
 import type { HttpContext } from '@adonisjs/core/http';
 import type { NextFn } from '@adonisjs/core/types/http';
-import { UserAbilitiesEnum } from '#types/user';
 import { Authenticators } from '@adonisjs/auth/types';
 import { ForbiddenException, UnauthorizedException } from '#exceptions/domain_exception';
+import { Permission } from '#types/enum/permission';
 
-/**
- * Admin middleware is used to ensure only admin users with '*' ability
- * can access specific routes. This provides an additional layer of security
- * for admin-only endpoints.
- */
-export default class AdminMiddleware {
+export default class PermissionMiddleware {
   async handle(
     ctx: HttpContext,
     next: NextFn,
-    options: { guards?: (keyof Authenticators)[] } = { guards: ['api'] }
+    options: {
+      guards?: (keyof Authenticators)[];
+      permission: Permission;
+    } = { guards: ['api'], permission: Permission.ROLES_ASSIGN }
   ) {
     const { auth } = ctx;
 
@@ -31,9 +29,8 @@ export default class AdminMiddleware {
       throw new UnauthorizedException('Valid access token required');
     }
 
-    // Check if user has admin privileges (wildcard ability)
-    if (!user.currentAccessToken.allows(UserAbilitiesEnum.ADMIN)) {
-      throw new ForbiddenException('Admin privileges required');
+    if (!(await ctx.bouncer.allows('can', options.permission))) {
+      throw new ForbiddenException(`Permission required: ${options.permission}`);
     }
 
     return next();

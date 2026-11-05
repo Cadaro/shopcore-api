@@ -1,37 +1,12 @@
-import { UserAbilitiesEnum, UserRolesEnum } from '#types/user';
 import User from '#models/user';
 import { Token, TokenProvider, TokenTypeEnum } from '#types/token';
 import stringHelpers from '@adonisjs/core/helpers/string';
 
 export default class TokenService implements TokenProvider {
   /**
-   * Get user abilities based on role
-   */
-  private getUserAbilities(role: UserRolesEnum): UserAbilitiesEnum[] {
-    const abilities: UserAbilitiesEnum[] = [];
-
-    /*
-     * Create access token with abilities:
-     * - '*' for all abilities (admin)
-     * - 'user' for basic user abilities (non-admin)
-     */
-
-    if (role === UserRolesEnum.ADMIN) {
-      abilities.push(UserAbilitiesEnum.ADMIN);
-    } else {
-      abilities.push(UserAbilitiesEnum.USER);
-    }
-
-    return abilities;
-  }
-
-  /**
    * Create token for user
    */
   public async createToken(user: User, expiresIn?: string): Promise<Token> {
-    // Get abilities based on user role
-    const abilities = this.getUserAbilities(user.role);
-
     // Set token expiration time, default to 24h
     const tokenExpiresIn = expiresIn ?? '24h';
 
@@ -44,7 +19,7 @@ export default class TokenService implements TokenProvider {
       await User.accessTokens.delete(user, availableTokens[0].identifier);
     }
 
-    const userAccessToken = await User.accessTokens.create(user, abilities, {
+    const userAccessToken = await User.accessTokens.create(user, [], {
       expiresIn: tokenExpiresIn,
     });
 

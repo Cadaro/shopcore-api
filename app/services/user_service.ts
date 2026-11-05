@@ -1,5 +1,6 @@
 import User from '#models/user';
 import { UserCreatedDto, UserCreateDto, UserData, UserDb } from '#types/user';
+import { Role } from '#types/enum/role';
 import db from '@adonisjs/lucid/services/db';
 import { randomUUID } from 'crypto';
 import { ConflictException, NotFoundException } from '#exceptions/domain_exception';
@@ -13,7 +14,14 @@ export default class UserService {
       }
       const { email, password, firstName, lastName } = userData;
       const createdUser = await User.create(
-        { email, password, firstName, lastName, uuid: randomUUID() },
+        {
+          email,
+          password,
+          firstName,
+          lastName,
+          uuid: randomUUID(),
+          role: Role.CUSTOMER,
+        },
         { client: trx }
       );
       if (!createdUser) {
@@ -22,6 +30,16 @@ export default class UserService {
       return createdUser;
     });
     return { userId: user.uuid };
+  }
+
+  async updateUserRole(userId: string, role: Role): Promise<void> {
+    const user = await User.findBy({ uuid: userId });
+    if (!user) {
+      throw new NotFoundException(`User ${userId} not found`);
+    }
+
+    user.role = role;
+    await user.save();
   }
 
   async updateUser(userData: Partial<UserData>): Promise<void> {

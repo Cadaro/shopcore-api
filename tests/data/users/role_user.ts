@@ -1,11 +1,11 @@
-import { UserRolesEnum } from '#types/user';
+import { Role } from '#types/enum/role';
 import { randomUUID } from 'crypto';
 
 export function generateRoleUser() {
   return {
     email: `${randomUUID()}@example.com`,
     password: 'user123',
-    role: UserRolesEnum.USER,
+    role: Role.CUSTOMER,
     uuid: randomUUID(),
   };
 }

@@ -13,7 +13,7 @@ export default class InvoiceCustomersController {
   constructor(private invoiceCustomerService: InvoiceCustomerService) {}
 
   async index({ auth, response }: HttpContext) {
-    // User middleware ensures authentication, so auth.user is guaranteed to exist
+    // Permission middleware ensures authentication, so auth.user is guaranteed to exist
     const customerInvoiceData = await this.invoiceCustomerService.fetchCustomerData(
       auth.user!.uuid
     );
@@ -21,7 +21,7 @@ export default class InvoiceCustomersController {
   }
 
   async store({ auth, request, response, bouncer }: HttpContext) {
-    // User middleware ensures authentication, so auth.user is guaranteed to exist
+    // Permission middleware ensures authentication, so auth.user is guaranteed to exist
     if (await bouncer.with(CustomerInvoiceDataPolicy).denies('create')) {
       throw new ForbiddenException('You are not authorized to create this resource');
     }
@@ -38,7 +38,7 @@ export default class InvoiceCustomersController {
   }
 
   async update({ auth, request, response }: HttpContext) {
-    // User middleware ensures authentication, so auth.user is guaranteed to exist
+    // Permission middleware ensures authentication, so auth.user is guaranteed to exist
     const validatedInvoiceCustomerData = await request.validateUsing(
       updateInvoiceCustomerValidator
     );
