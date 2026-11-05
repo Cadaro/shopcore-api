@@ -14,9 +14,14 @@ import { NotFoundException } from '#exceptions/domain_exception';
 import StockService from '#services/stock_service';
 import OrderStatusService from '#services/order_status_service';
 import { DateTime } from 'luxon';
+import { PaginationQuery } from '#types/pagination';
+import PaginationDataMapper from '#mappers/pagination_data_mapper';
+import paginationConfig from '#config/pagination';
+import { orderSortColumns } from '#common/pagination';
 
 export default class OrderService implements OrderServiceBase {
   private orderDataMapper = new OrderDataMapper();
+  private paginationDataMapper = new PaginationDataMapper();
   private stockService = new StockService();
   private orderStatusService = new OrderStatusService();
 
@@ -31,6 +36,26 @@ export default class OrderService implements OrderServiceBase {
     const userOrderListMapped: Array<OrderSummaryDto> =
       this.orderDataMapper.mapOrderModelToOrderSummaryType(userOrderSkus);
     return userOrderListMapped;
+  }
+
+  async fetchUserOrderPage(userId: string, pagination: PaginationQuery) {
+    const page = pagination.page ?? paginationConfig.defaultPage;
+    const perPage = pagination.perPage ?? paginationConfig.defaultPerPage;
+    const [sortField, sortDirection] = (pagination.sort ?? 'createdAt:desc').split(':');
+    const sortColumn = orderSortColumns[sortField];
+    if (!sortColumn || (sortDirection !== 'asc' && sortDirection !== 'desc')) {
+      throw new Error('Invalid order pagination sort');
+    }
+
+    const paginator = await Order.query()
+      .where('user_id', userId)
+      .orderBy(sortColumn, sortDirection)
+      .orderBy('id', 'asc')
+      .preload('details')
+      .paginate(page, perPage);
+    const summaries = this.orderDataMapper.mapOrderModelToOrderSummaryType(paginator.all());
+    const meta = paginator.getMeta();
+    return this.paginationDataMapper.map(summaries, meta.currentPage, meta.perPage, meta.total);
   }
 
   async createOrder(orderCreate: OrderCreateRequestDto, userId: string): Promise<OrderCreatedDto> {

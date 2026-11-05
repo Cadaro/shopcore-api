@@ -386,8 +386,49 @@ components:
             $ref: '#/components/schemas/StockPrice'
         availableQty:
           type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
         thumbnail:
           $ref: '#/components/schemas/StockPhoto'
+
+    PaginationMeta:
+      type: object
+      required:
+        - page
+        - perPage
+        - total
+        - lastPage
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        perPage:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+        lastPage:
+          type: integer
+          minimum: 0
+
+    PaginatedStockItemSummaryDto:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockItemSummaryDto'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
 
     StockItemDataDto:
       type: object
@@ -549,6 +590,18 @@ components:
         updatedAt:
           type: string
           format: date-time
+    PaginatedOrderSummaryDto:
+      type: object
+      required:
+        - data
+        - meta
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderSummaryDto'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
     OrderSku:
       type: object
       properties:
@@ -894,16 +947,44 @@ paths:
       tags:
         - stocks
       summary: List stocks
-      description: Returns a list of available stocks (products)
+      description: >-
+        Returns a paginated list of available stocks (products). Breaking change:
+        the response is now an object containing data and meta instead of an array.
+      parameters:
+        - name: page
+          in: query
+          description: Page number (defaults to 1)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: perPage
+          in: query
+          description: Items per page (defaults to 20; maximum 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort
+          in: query
+          description: 'Sort by name, sku, availableQty, createdAt, or updatedAt using field:asc|desc (defaults to name:asc)'
+          schema:
+            type: string
+            pattern: '^(name|sku|availableQty|createdAt|updatedAt):(asc|desc)$'
       responses:
         '200':
-          description: A list of stocks
+          description: Paginated stocks
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/StockItemSummaryDto'
+                $ref: '#/components/schemas/PaginatedStockItemSummaryDto'
+        '422':
+          description: Invalid pagination or sorting parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainRuleException'
         default:
           $ref: '#/components/responses/InternalServerError'
 
@@ -1042,25 +1123,55 @@ paths:
     get:
       tags:
         - orders
-      summary: List orders summarry
-      description: Returns a list of orders summary for the authenticated user
+      summary: List order summaries
+      description: >-
+        Returns a paginated list of order summaries for the authenticated user.
+        Breaking change: the response is now an object containing data and meta instead of an array.
       security:
         - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number (defaults to 1)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: perPage
+          in: query
+          description: Items per page (defaults to 20; maximum 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort
+          in: query
+          description: >-
+            Sort by orderId, status, createdAt, or updatedAt
+            using field:asc|desc (defaults to createdAt:desc)
+          schema:
+            type: string
+            pattern: '^(orderId|status|createdAt|updatedAt):(asc|desc)$'
       responses:
         '200':
-          description: A list of orders
+          description: Paginated order summaries
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/OrderSummaryDto'
+                $ref: '#/components/schemas/PaginatedOrderSummaryDto'
         '401':
           description: Unauthorized
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedException'
+        '422':
+          description: Invalid pagination or sorting parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainRuleException'
         default:
           $ref: '#/components/responses/InternalServerError'
     post:

@@ -23,7 +23,16 @@ test.group('Show Order Summaries', () => {
       .header('content-type', 'application/json');
     response.assertStatus(200);
 
-    const orderSummaries: Array<OrderSummaryDto> = response.body();
+    const orderSummaries: Array<OrderSummaryDto> = response.body().data;
+    assert.isArray(orderSummaries);
+    assert.deepEqual(Object.keys(response.body().meta).sort(), [
+      'lastPage',
+      'page',
+      'perPage',
+      'total',
+    ]);
+    assert.equal(response.body().meta.page, 1);
+    assert.equal(response.body().meta.perPage, 20);
 
     assert.onlyProperties(orderSummaries[0], [
       'orderId',
@@ -60,7 +69,7 @@ test.group('Show Order Summaries', () => {
 
     const response = await client.get('/api/orders').bearerToken(token.token);
     response.assertStatus(200);
-    assert.equal(response.body()[0].totalAmount, 0.3);
+    assert.equal(response.body().data[0].totalAmount, 0.3);
     const details = await client.get(`/api/orders/${created.orderId}`).bearerToken(token.token);
     details.assertStatus(200);
     assert.equal(details.body().delivery.deliveryPrice, 0.29);
@@ -78,5 +87,46 @@ test.group('Show Order Summaries', () => {
         delivery: { ...orderCreatePickupPointCOD.delivery, deliveryPrice: 0.001 },
       });
     response.assertStatus(422);
+  });
+
+  test('paginates, sorts, and validates order list parameters', async ({ assert, client }) => {
+    const user = await new CreateUser(generateRoleUser()).create();
+    const token = await tokenService.createToken(user);
+    const firstOrder = await orderService.createOrder(orderCreatePickupPointCOD, user.uuid);
+    const secondOrder = await orderService.createOrder(orderCreatePickupPointCOD, user.uuid);
+    const sortedIds = [firstOrder.orderId, secondOrder.orderId].sort();
+
+    const firstPage = await client
+      .get('/api/orders?page=1&perPage=1&sort=orderId:asc')
+      .bearerToken(token.token);
+    firstPage.assertStatus(200);
+    assert.lengthOf(firstPage.body().data, 1);
+    assert.equal(firstPage.body().meta.page, 1);
+    assert.equal(firstPage.body().meta.perPage, 1);
+    assert.equal(firstPage.body().meta.total, 2);
+    assert.equal(firstPage.body().data[0].orderId, sortedIds[0]);
+
+    const secondPage = await client
+      .get('/api/orders?page=2&perPage=1&sort=orderId:asc')
+      .bearerToken(token.token);
+    secondPage.assertStatus(200);
+    assert.equal(secondPage.body().data[0].orderId, sortedIds[1]);
+    assert.equal(secondPage.body().meta.lastPage, 2);
+
+    for (const query of [
+      'page=0',
+      'perPage=101',
+      'sort=unknown:asc',
+      'sort=courier:asc',
+      'sort=status:up',
+    ]) {
+      const invalid = await client.get(`/api/orders?${query}`).bearerToken(token.token);
+      invalid.assertStatus(422);
+    }
+
+    for (const sort of ['status:asc', 'createdAt:desc', 'updatedAt:asc']) {
+      const sorted = await client.get(`/api/orders?sort=${sort}`).bearerToken(token.token);
+      sorted.assertStatus(200);
+    }
   });
 });
