@@ -27,6 +27,8 @@ export default class StockDataMapper {
         prices: this.mapPrices(stock),
         availableQty: stock.availableQty,
         thumbnail: stock.photos[0],
+        createdAt: stock.createdAt,
+        updatedAt: stock.updatedAt,
       };
     });
   }

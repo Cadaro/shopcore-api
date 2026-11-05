@@ -16,9 +16,14 @@ import {
   NotFoundException,
 } from '#exceptions/domain_exception';
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database';
+import { PaginationQuery } from '#types/pagination';
+import PaginationDataMapper from '#mappers/pagination_data_mapper';
+import paginationConfig from '#config/pagination';
+import { stockSortColumns } from '#common/pagination';
 
 export default class StockService {
   private stockDataMapper = new StockDataMapper();
+  private paginationDataMapper = new PaginationDataMapper();
 
   async fetchSingleStockItem(itemId: string) {
     const singleStock = await Stock.findBy({ itemId });
@@ -32,14 +37,31 @@ export default class StockService {
     return mappedSingleStockItem;
   }
 
-  async fetchAvailableStock(): Promise<Array<StockItemSummaryDto>> {
-    const stocks = await Stock.query()
+  async fetchAvailableStock(pagination: PaginationQuery) {
+    const page = pagination.page ?? paginationConfig.defaultPage;
+    const perPage = pagination.perPage ?? paginationConfig.defaultPerPage;
+    const [sortField, sortDirection] = (pagination.sort ?? 'name:asc').split(':');
+    const sortColumn = stockSortColumns[sortField];
+    if (!sortColumn || (sortDirection !== 'asc' && sortDirection !== 'desc')) {
+      throw new Error('Invalid stock pagination sort');
+    }
+
+    const paginator = await Stock.query()
       .where('available_qty', '>', 0)
+      .orderBy(sortColumn, sortDirection)
+      .orderBy('id', 'asc')
       .preload('photos')
-      .preload('prices', (query) => query.orderBy('id'));
+      .preload('prices', (query) => query.orderBy('id'))
+      .paginate(page, perPage);
     const mappedStockItemSummary: Array<StockItemSummaryDto> =
-      this.stockDataMapper.mapStockModelToStockItemSummary(stocks);
-    return mappedStockItemSummary;
+      this.stockDataMapper.mapStockModelToStockItemSummary(paginator.all());
+    const meta = paginator.getMeta();
+    return this.paginationDataMapper.map(
+      mappedStockItemSummary,
+      meta.currentPage,
+      meta.perPage,
+      meta.total
+    );
   }
 
   async updateStock(items: Array<ItemWithQty>, trx: TransactionClientContract) {

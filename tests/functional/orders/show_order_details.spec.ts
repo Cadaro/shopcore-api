@@ -20,7 +20,7 @@ test.group('Show Order Details', () => {
       .bearerToken(token.token)
       .header('content-type', 'application/json');
 
-    const orderSummaries: Array<OrderSummaryDto> = responseOrderList.body();
+    const orderSummaries: Array<OrderSummaryDto> = responseOrderList.body().data;
 
     const responseSingleOrderData = await client
       .get(`/api/orders/${orderSummaries[0].orderId}`)

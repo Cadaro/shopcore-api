@@ -1,4 +1,5 @@
 import { Currency } from '#types/enum/currency_code';
+import { DateTime } from 'luxon';
 
 export type StockPriceDto = {
   currency: Currency;
@@ -19,6 +20,8 @@ export type StockItemSummaryDto = {
   prices: Array<StockPriceDto>;
   availableQty: number;
   thumbnail: StockPhoto;
+  createdAt: DateTime;
+  updatedAt: DateTime;
 };
 
 export type StockItemDataDto = {
