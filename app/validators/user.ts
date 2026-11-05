@@ -1,4 +1,5 @@
 import vine from '@vinejs/vine';
+import { Role } from '#types/enum/role';
 
 /**
  * Validator to validate the payload when creating
@@ -19,3 +20,7 @@ export const updateUserValidator = vine.compile(
     lastName: vine.string().minLength(2).maxLength(50).optional(),
   })
 );
+
+export const updateUserRoleValidator = vine.create({
+  role: vine.enum([Role.CUSTOMER, Role.STAFF, Role.ADMIN]),
+});

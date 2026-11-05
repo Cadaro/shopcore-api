@@ -13,13 +13,16 @@
 
 This platform is actively developed and expanding with new features to meet various e-commerce needs. Perfect for small to medium-sized businesses looking for a customizable, API-first e-commerce solution.
 
+# Roles and permissions
+
+The API supports `customer`, `staff`, and `admin` roles. Customers can access customer-facing order, product, profile, and invoice-data operations. Staff can also manage products and orders. Admins have all permissions, including assigning roles with `PATCH /api/auth/users/{userId}/role`. Route permissions are documented in the OpenAPI specification.
+
 # Upcoming Features
 
 - 🚚 Multiple courier gateway integrations
 - 💳 Multiple payment gateway integrations
 - 📦 Multi-step order processing
 - 📨 Order notifications
-- 🔐 Advanced user roles and permissions
 - 📦 Product variants and attributes
 - 🏷️ Dynamic pricing rules
 - 🌐 Multi-language support

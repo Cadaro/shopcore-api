@@ -1,4 +1,5 @@
 import { DateTime } from 'luxon';
+import { Role } from '#types/enum/role';
 
 export type UserData = {
   userId: string;
@@ -15,7 +16,7 @@ export type UserDb = {
   email: string;
   password: string;
   uuid: string;
-  role: UserRolesEnum;
+  role: Role;
   createdAt: DateTime;
   updatedAt: DateTime;
 };
@@ -25,7 +26,7 @@ export type UserCreateDb = {
   password: string;
   firstName?: string;
   lastName?: string;
-  role: UserRolesEnum;
+  role: Role;
   uuid: string;
 };
 
@@ -39,13 +40,3 @@ export type UserCreateDto = {
 export type UserCreatedDto = {
   userId: string;
 };
-
-export enum UserAbilitiesEnum {
-  ADMIN = '*',
-  USER = 'user',
-}
-
-export enum UserRolesEnum {
-  ADMIN = 'admin',
-  USER = 'user',
-}

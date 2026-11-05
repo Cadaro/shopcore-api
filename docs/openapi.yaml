@@ -4,6 +4,7 @@ info:
   description: |
     OpenAPI specification for the ShopCore app.
     Contains endpoints for stocks, orders, users, customer invoice data and token authentication.
+    Roles are customer, staff, and admin. Customers can view products, manage their own orders and invoice data, update their profile, and create or cancel returns. Staff additionally manage products, orders, customers, and returns. Admins have all permissions and are the only role allowed to assign roles.
 
     ## Authentication
     Most endpoints require authentication using Bearer tokens. Obtain a token by calling the `/api/auth/token` endpoint with valid credentials.
@@ -756,7 +757,8 @@ paths:
       tags:
         - users
       summary: Fetch data of authenticated
-      description: Returns a data of registered user. Requires authentication.
+      description: Returns the authenticated user's data. Requires the `users.view` permission.
+      x-required-permission: users.view
       security:
         - bearerAuth: []
       responses:
@@ -784,7 +786,7 @@ paths:
       tags:
         - users
       summary: Register user
-      description: Create a new user (registration). Public endpoint.
+      description: Public registration always creates a customer; role assignment in the request is ignored.
       requestBody:
         required: true
         content:
@@ -816,7 +818,8 @@ paths:
       tags:
         - users
       summary: Update authenticated user
-      description: Update the authenticated user's profile
+      description: Update the authenticated user's profile. Requires the `users.update` permission.
+      x-required-permission: users.update
       security:
         - bearerAuth: []
       requestBody:
@@ -849,12 +852,71 @@ paths:
         default:
           $ref: '#/components/responses/InternalServerError'
 
+  /api/auth/users/{userId}/role:
+    patch:
+      tags:
+        - users
+      summary: Assign a user role
+      description: Assign customer, staff, or admin to a user. Admin only; requires `roles.assign`.
+      x-required-permission: roles.assign
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - role
+              properties:
+                role:
+                  type: string
+                  enum: [customer, staff, admin]
+      responses:
+        '204':
+          description: Role assigned
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedException'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+        '422':
+          description: Invalid role
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainRuleException'
+        default:
+          $ref: '#/components/responses/InternalServerError'
+
   /api/customers/invoice-data:
     get:
       tags:
         - customer-invoice-data
       summary: Get customer (user) invoice data
-      description: Returns customer (user) invoice data related to userId
+      description: Returns the authenticated user's invoice data. Requires `customers.invoice_data.manage`.
+      x-required-permission: customers.invoice_data.manage
       security:
         - bearerAuth: []
       responses:
@@ -878,7 +940,8 @@ paths:
       tags:
         - customer-invoice-data
       summary: Create new customer (user) invoice data related to userId
-      description: Create new customer (user) invoice data related to userId
+      description: Create invoice data for the authenticated user. Requires `customers.invoice_data.manage`.
+      x-required-permission: customers.invoice_data.manage
       security:
         - bearerAuth: []
       requestBody:
@@ -915,7 +978,8 @@ paths:
       tags:
         - customer-invoice-data
       summary: Update customer (user) invoice data related to userId
-      description: Update customer (user) invoice data related to userId
+      description: Update invoice data for the authenticated user. Requires `customers.invoice_data.manage`.
+      x-required-permission: customers.invoice_data.manage
       security:
         - bearerAuth: []
       requestBody:
@@ -948,8 +1012,9 @@ paths:
         - stocks
       summary: List stocks
       description: >-
-        Returns a paginated list of available stocks (products). Breaking change:
+        Public endpoint; customers are also granted `products.view`. Returns a paginated list of available stocks (products). Breaking change:
         the response is now an object containing data and meta instead of an array.
+      x-required-permission: public
       parameters:
         - name: page
           in: query
@@ -992,7 +1057,8 @@ paths:
       tags:
         - stocks
       summary: Create stock
-      description: Create a new stock entry; admin only
+      description: Create a new stock entry. Requires `products.manage` (staff or admin).
+      x-required-permission: products.manage
       security:
         - bearerAuth: []
       requestBody:
@@ -1039,7 +1105,8 @@ paths:
       tags:
         - stocks
       summary: Get stock
-      description: Retrieve details for a single stock item by itemId
+      description: Public endpoint; customers are also granted `products.view`. Retrieve details for a single stock item by itemId.
+      x-required-permission: public
       parameters:
         - name: itemId
           in: path
@@ -1065,7 +1132,8 @@ paths:
       tags:
         - stocks
       summary: Replace stock details
-      description: Replace a stock item and its complete prices list; admin only
+      description: Replace a stock item and its complete prices list. Requires `products.manage` (staff or admin).
+      x-required-permission: products.manage
       security:
         - bearerAuth: []
       parameters:
@@ -1126,7 +1194,8 @@ paths:
       summary: List order summaries
       description: >-
         Returns a paginated list of order summaries for the authenticated user.
-        Breaking change: the response is now an object containing data and meta instead of an array.
+        Requires `orders.view`. Breaking change: the response is now an object containing data and meta instead of an array.
+      x-required-permission: orders.view
       security:
         - bearerAuth: []
       parameters:
@@ -1178,7 +1247,8 @@ paths:
       tags:
         - orders
       summary: Create order
-      description: Create a new order for the authenticated user
+      description: Create a new order for the authenticated user. Requires `orders.create`.
+      x-required-permission: orders.create
       security:
         - bearerAuth: []
       requestBody:
@@ -1219,7 +1289,8 @@ paths:
       tags:
         - orders
       summary: Get order
-      description: Retrieve a single order by id for the authenticated user
+      description: Retrieve a single order by id for the authenticated user. Requires `orders.view`.
+      x-required-permission: orders.view
       security:
         - bearerAuth: []
       parameters:
@@ -1254,7 +1325,8 @@ paths:
       tags:
         - orders
       summary: Get order status history
-      description: Retrieve the status history of an order owned by the authenticated user, oldest first
+      description: Retrieve the status history of an order owned by the authenticated user, oldest first. Requires `orders.view`.
+      x-required-permission: orders.view
       security:
         - bearerAuth: []
       parameters:

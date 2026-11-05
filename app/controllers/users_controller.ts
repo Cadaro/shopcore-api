@@ -1,7 +1,11 @@
 import UserPolicy from '#policies/user_policy';
 import UserService from '#services/user_service';
 import { UserCreatedDto, UserCreateDto, UserData } from '#types/user';
-import { createUserValidator, updateUserValidator } from '#validators/user';
+import {
+  createUserValidator,
+  updateUserRoleValidator,
+  updateUserValidator,
+} from '#validators/user';
 import { inject } from '@adonisjs/core';
 import type { HttpContext } from '@adonisjs/core/http';
 import { DomainRuleException, ForbiddenException } from '#exceptions/domain_exception';
@@ -39,6 +43,12 @@ export default class UsersController {
     }
     const updatedUserData: Partial<UserData> = { userId: auth.user!.uuid, ...validatedUserData };
     await this.userService.updateUser(updatedUserData);
+    return response.noContent();
+  }
+
+  async updateRole({ params, request, response }: HttpContext) {
+    const { role } = await request.validateUsing(updateUserRoleValidator);
+    await this.userService.updateUserRole(params.userId, role);
     return response.noContent();
   }
 }

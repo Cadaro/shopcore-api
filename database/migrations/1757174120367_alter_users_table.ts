@@ -1,4 +1,3 @@
-import { UserRolesEnum } from '#types/user';
 import { BaseSchema } from '@adonisjs/lucid/schema';
 
 export default class extends BaseSchema {
@@ -6,7 +5,7 @@ export default class extends BaseSchema {
 
   async up() {
     this.schema.alterTable(this.tableName, (table) => {
-      table.string('role').notNullable().defaultTo(UserRolesEnum.USER);
+      table.string('role').notNullable().defaultTo('user');
     });
   }
 

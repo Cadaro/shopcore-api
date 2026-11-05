@@ -5,6 +5,7 @@ import { newItemWithoutItemId } from '../../data/items/new_item_without_item_id.
 import { newItemWithItemId } from '../../data/items/new_item_with_item_id.js';
 import { generateRoleUser } from '#tests/data/users/role_user';
 import { generateRoleAdmin } from '#tests/data/users/role_admin';
+import { generateRoleStaff } from '#tests/data/users/role_staff';
 import { CreateUser } from '#tests/data/users/user';
 import { StockItemCreatedDto } from '#types/stock';
 import { randomUUID } from 'node:crypto';
@@ -35,6 +36,22 @@ test.group('Items create', () => {
       .json(newItemWithoutItemId)
       .bearerToken(token.token);
     response.assertStatus(403);
+  });
+
+  test('should allow staff to create and update stock', async ({ client }) => {
+    const staff = await new CreateUser(generateRoleStaff()).create();
+    const token = await createTokenForUser(staff);
+    const created = await client
+      .post('/api/stocks')
+      .json(newItemWithoutItemId)
+      .bearerToken(token.token);
+    created.assertStatus(201);
+
+    const updated = await client
+      .put(`/api/stocks/${created.body().itemId}`)
+      .json(newItemWithoutItemId)
+      .bearerToken(token.token);
+    updated.assertStatus(200);
   });
 
   test('rejects fractional minor-unit VAT amounts', async ({ client }) => {

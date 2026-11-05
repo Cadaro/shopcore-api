@@ -1,0 +1,16 @@
+export enum Permission {
+  PRODUCTS_VIEW = 'products.view',
+  PRODUCTS_MANAGE = 'products.manage',
+  ORDERS_CREATE = 'orders.create',
+  ORDERS_VIEW = 'orders.view',
+  ORDERS_MANAGE = 'orders.manage',
+  CUSTOMERS_MANAGE = 'customers.manage',
+  INVOICE_DATA_MANAGE = 'customers.invoice_data.manage',
+  USERS_VIEW = 'users.view',
+  USERS_UPDATE = 'users.update',
+  RETURNS_CREATE = 'returns.create',
+  RETURNS_CANCEL = 'returns.cancel',
+  RETURNS_MANAGE = 'returns.manage',
+  REPORTS_VIEW = 'reports.view',
+  ROLES_ASSIGN = 'roles.assign',
+}
