@@ -3,7 +3,11 @@ import { UserCreatedDto, UserCreateDto, UserData, UserDb } from '#types/user';
 import { Role } from '#types/enum/role';
 import db from '@adonisjs/lucid/services/db';
 import { randomUUID } from 'crypto';
-import { ConflictException, NotFoundException } from '#exceptions/domain_exception';
+import {
+  ConflictException,
+  InternalServerException,
+  NotFoundException,
+} from '#exceptions/domain_exception';
 
 export default class UserService {
   async createUser(userData: UserCreateDto): Promise<UserCreatedDto> {
@@ -25,7 +29,7 @@ export default class UserService {
         { client: trx }
       );
       if (!createdUser) {
-        throw new Error(`Cannot create user account for ${userData.email}`);
+        throw new InternalServerException(`Cannot create user account for ${userData.email}`);
       }
       return createdUser;
     });

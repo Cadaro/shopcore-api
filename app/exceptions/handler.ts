@@ -16,6 +16,13 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    */
   async handle(error: unknown, ctx: HttpContext) {
     if (error instanceof DomainException) {
+      if (error.status >= 500) {
+        // Internal messages may contain emails or ids; keep them in logs only.
+        return sendError(ctx, error.status, {
+          code: error.code,
+          message: 'Internal server error',
+        });
+      }
       return sendError(ctx, error.status, {
         code: error.code,
         message: error.message,

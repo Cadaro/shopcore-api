@@ -13,7 +13,9 @@ import { randomUUID } from 'crypto';
 import {
   ConflictException,
   InsufficientStockError,
+  InternalServerException,
   NotFoundException,
+  DomainRuleException,
 } from '#exceptions/domain_exception';
 import type { TransactionClientContract } from '@adonisjs/lucid/types/database';
 import { PaginationQuery } from '#types/pagination';
@@ -43,7 +45,9 @@ export default class StockService {
     const [sortField, sortDirection] = (pagination.sort ?? 'name:asc').split(':');
     const sortColumn = stockSortColumns[sortField];
     if (!sortColumn || (sortDirection !== 'asc' && sortDirection !== 'desc')) {
-      throw new Error('Invalid stock pagination sort');
+      throw new DomainRuleException('Invalid stock pagination sort', [
+        { field: 'sort', rule: 'enum', message: 'Invalid sort field or direction' },
+      ]);
     }
 
     const paginator = await Stock.query()
@@ -97,7 +101,7 @@ export default class StockService {
       const savedStockPrices = await savedStockHead.related('prices').createMany(prices);
 
       if (!savedStockHead || !savedStockPhotos || !savedStockPrices) {
-        throw new Error(`Could not create new stock item = ${stock.itemId}`);
+        throw new InternalServerException(`Could not create new stock item = ${stock.itemId}`);
       }
 
       return savedStockHead.itemId;

@@ -51,3 +51,9 @@ export class DomainRuleException extends DomainException {
     super(message, 'DOMAIN_RULE_VIOLATION', 422, details);
   }
 }
+
+export class InternalServerException extends DomainException {
+  constructor(message: string, details?: ErrorDetail[]) {
+    super(message, 'INTERNAL_SERVER_ERROR', 500, details);
+  }
+}

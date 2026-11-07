@@ -10,7 +10,11 @@ import OrderDataMapper from '#mappers/order/order_data_mapper';
 import { OrderServiceBase } from '#types/interfaces/order/order_service_base';
 import { DeliveryMethod } from '#types/enum/delivery_method';
 import logger from '@adonisjs/core/services/logger';
-import { NotFoundException } from '#exceptions/domain_exception';
+import {
+  DomainRuleException,
+  InternalServerException,
+  NotFoundException,
+} from '#exceptions/domain_exception';
 import StockService from '#services/stock_service';
 import OrderStatusService from '#services/order_status_service';
 import { DateTime } from 'luxon';
@@ -44,7 +48,9 @@ export default class OrderService implements OrderServiceBase {
     const [sortField, sortDirection] = (pagination.sort ?? 'createdAt:desc').split(':');
     const sortColumn = orderSortColumns[sortField];
     if (!sortColumn || (sortDirection !== 'asc' && sortDirection !== 'desc')) {
-      throw new Error('Invalid order pagination sort');
+      throw new DomainRuleException('Invalid order pagination sort', [
+        { field: 'sort', rule: 'enum', message: 'Invalid sort field or direction' },
+      ]);
     }
 
     const paginator = await Order.query()
@@ -95,7 +101,9 @@ export default class OrderService implements OrderServiceBase {
         !savedOrderSku ||
         (orderCreate.delivery.method === DeliveryMethod.HOME_DELIVERY && !savedDeliveryAddress)
       ) {
-        throw new Error('Could not create new order');
+        throw new InternalServerException(
+          `Could not create new order ${mappedOrder.orderHead.orderId}`
+        );
       }
       logger.info(`Successfully created order ${savedOrderHead.orderId}`);
       await this.orderStatusService.recordStatus(
