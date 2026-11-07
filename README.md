@@ -76,8 +76,9 @@ node ace db:seed
 ## Running tests locally
 
 Use the MySQL database above (or another MySQL 8.0 instance) and set the five
-database variables in `.env` to its connection details. The test bootstrap
-runs migrations and seeders before the suite:
+database variables in `.env` to its connection details. Set `LIMITER_STORE=database`
+for the functional tests, which isolate rate-limit counters in MySQL. The test
+bootstrap runs migrations and seeders before the suite:
 
 ```
 npm test

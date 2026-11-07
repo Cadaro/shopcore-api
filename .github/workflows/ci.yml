@@ -34,6 +34,8 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
+    env:
+      LIMITER_STORE: database
 
     services:
       mysql:
