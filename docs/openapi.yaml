@@ -52,7 +52,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/NotFoundException'
+            $ref: '#/components/schemas/InternalServerException'
   schemas:
     ErrorDetail:
       type: object
@@ -146,6 +146,18 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ErrorDetail'
+    InternalServerException:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: INTERNAL_SERVER_ERROR
+        message:
+          type: string
+          example: Internal server error
 
     CountryCode:
       type: string

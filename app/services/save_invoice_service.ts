@@ -8,6 +8,7 @@ import OrderService from '#services/order_service';
 import { OrderDataDto } from '#types/order';
 import logger from '@adonisjs/core/services/logger';
 import { InvoiceBase } from '#types/interfaces/invoice/invoice_base';
+import { InternalServerException } from '#exceptions/domain_exception';
 
 export default class SaveInvoice implements InvoiceBase {
   private orderService = new OrderService();
@@ -58,7 +59,9 @@ export default class SaveInvoice implements InvoiceBase {
         .createMany(this.invoiceMapper.mapInvoiceDetails(orderData.details));
 
       if (!savedInvoiceHead || !savedInvoiceDetails) {
-        throw new Error(`Could not create invoice for orderId = ${invoiceData.orderId}`);
+        throw new InternalServerException(
+          `Could not create invoice for orderId = ${invoiceData.orderId}`
+        );
       }
       logger.info(
         `Invoice ${newInvoiceNumber} created successfully for order ${invoiceData.orderId}`
