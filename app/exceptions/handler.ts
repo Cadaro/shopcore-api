@@ -1,6 +1,11 @@
 import app from '@adonisjs/core/services/app';
 import { HttpContext, ExceptionHandler } from '@adonisjs/core/http';
-import { DomainException, type ErrorDetail } from '#exceptions/domain_exception';
+import { errors as limiterErrors } from '@adonisjs/limiter';
+import {
+  DomainException,
+  TooManyRequestsException,
+  type ErrorDetail,
+} from '#exceptions/domain_exception';
 import type { IResponseError } from '#types/response';
 
 export default class HttpExceptionHandler extends ExceptionHandler {
@@ -15,6 +20,10 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    * response to the client
    */
   async handle(error: unknown, ctx: HttpContext) {
+    if (error instanceof limiterErrors.E_TOO_MANY_REQUESTS) {
+      error = new TooManyRequestsException();
+    }
+
     if (error instanceof DomainException) {
       if (error.status >= 500) {
         // Internal messages may contain emails or ids; keep them in logs only.

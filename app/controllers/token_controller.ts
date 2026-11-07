@@ -25,4 +25,17 @@ export default class TokenController {
 
     return response.ok(token);
   }
+
+  /**
+   * Revoke the current access token
+   * DELETE /token
+   */
+  async destroy({ auth, response }: HttpContext) {
+    const user = auth.user!;
+    const currentAccessToken = user.currentAccessToken!;
+
+    await User.accessTokens.delete(user, currentAccessToken.identifier);
+
+    return response.noContent();
+  }
 }

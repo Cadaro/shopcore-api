@@ -16,6 +16,7 @@ import UsersController from '#controllers/users_controller';
 import StocksController from '#controllers/stocks_controller';
 import InvoiceCustomersController from '#controllers/invoice_customers_controller';
 import { Permission } from '#types/enum/permission';
+import { loginThrottle, registrationThrottle } from '#start/limiter';
 
 router
   .group(() => {
@@ -65,8 +66,13 @@ router
         router
           .patch('users/:userId/role', [UsersController, 'updateRole'])
           .use(middleware.permission({ permission: Permission.ROLES_ASSIGN }));
-        router.resource('users', UsersController).apiOnly().only(['store']);
-        router.resource('token', TokenController).apiOnly().only(['store']);
+        router
+          .resource('users', UsersController)
+          .apiOnly()
+          .only(['store'])
+          .use('store', registrationThrottle);
+        router.post('token', [TokenController, 'store']).use(loginThrottle);
+        router.delete('token', [TokenController, 'destroy']).use(middleware.user());
       })
       .prefix('auth');
   })
