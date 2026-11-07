@@ -28,6 +28,12 @@ export class ConflictException extends DomainException {
   }
 }
 
+export class TooManyRequestsException extends DomainException {
+  constructor(message = 'Too many requests') {
+    super(message, 'TOO_MANY_REQUESTS', 429);
+  }
+}
+
 export class InsufficientStockError extends DomainException {
   constructor(message: string) {
     super(message, 'INSUFFICIENT_STOCK', 409);

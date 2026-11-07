@@ -3,8 +3,13 @@ import { generateRoleUser } from '#tests/data/users/role_user';
 import { CreateUser } from '#tests/data/users/user';
 import { orderCreateWithUnavailableStock } from '#tests/data/orders/order_create_with_unavailable_stock';
 import { test } from '@japa/runner';
+import db from '@adonisjs/lucid/services/db';
 
-test.group('Unified error response', () => {
+test.group('Unified error response', (group) => {
+  group.each.setup(async () => {
+    await db.from('rate_limits').delete();
+  });
+
   test('returns a standard not-found error', async ({ client, assert }) => {
     const response = await client.get('/api/stocks/not-a-real-stock-item');
     const body = response.body();

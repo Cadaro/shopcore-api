@@ -1,9 +1,14 @@
 import { Token, TokenTypeEnum } from '#types/token';
 import { UserData } from '#types/user';
 import { test } from '@japa/runner';
+import db from '@adonisjs/lucid/services/db';
 
 const userAuthData = { email: 'test@example.com', password: 'Test123' };
-test.group('Users create', () => {
+test.group('Users create', (group) => {
+  group.each.setup(async () => {
+    await db.from('rate_limits').delete();
+  });
+
   test('create new user', async ({ client, assert }) => {
     const response = await client.post('/api/auth/users').json(userAuthData);
     response.assertStatus(201);

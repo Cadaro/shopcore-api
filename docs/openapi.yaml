@@ -741,7 +741,7 @@ paths:
       tags:
         - auth
       summary: Obtain token
-      description: Obtain an authentication token by providing credentials (email and password).
+      description: Obtain an authentication token by providing credentials (email and password). Limited to 10 requests per minute per IP address.
       requestBody:
         required: true
         content:
@@ -761,6 +761,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UnauthorizedException'
+        '429':
+          description: Too many requests. Retry after the rate limit window resets.
+        default:
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - auth
+      summary: Revoke current token
+      description: Revoke the bearer token used for this request. Requires authentication.
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Token revoked
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedException'
         default:
           $ref: '#/components/responses/InternalServerError'
 
@@ -769,7 +789,7 @@ paths:
       tags:
         - users
       summary: Fetch data of authenticated
-      description: Returns the authenticated user's data. Requires the `users.view` permission.
+      description: Returns only the authenticated user's profile data, without credentials or other users' data. Requires the `users.view` permission.
       x-required-permission: users.view
       security:
         - bearerAuth: []
@@ -798,7 +818,7 @@ paths:
       tags:
         - users
       summary: Register user
-      description: Public registration always creates a customer; role assignment in the request is ignored.
+      description: Public registration always creates a customer; role assignment in the request is ignored. Limited to 10 requests per minute per IP address.
       requestBody:
         required: true
         content:
@@ -818,6 +838,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ConflictException'
+        '429':
+          description: Too many requests. Retry after the rate limit window resets.
         '422':
           description: Validation error
           content:
