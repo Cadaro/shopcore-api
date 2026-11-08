@@ -1,12 +1,12 @@
 import { test } from '@japa/runner';
-import db from '@adonisjs/lucid/services/db';
 import TokenService from '#services/token_service';
 import { CreateUser } from '#tests/data/users/user';
 import { generateRoleUser } from '#tests/data/users/role_user';
+import clearRateLimits from '#tests/helpers/clear_rate_limits';
 
 test.group('Authentication hardening', (group) => {
   group.each.setup(async () => {
-    await db.from('rate_limits').delete();
+    await clearRateLimits();
   });
 
   test('limits repeated failed login attempts', async ({ client }) => {

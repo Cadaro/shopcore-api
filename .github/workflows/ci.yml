@@ -35,9 +35,25 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     env:
-      LIMITER_STORE: database
+      LIMITER_STORE: redis
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ''
+      REDIS_DB: 1
+      REDIS_KEY_PREFIX: 'shopcore-test:'
+      LIMITER_KEY_PREFIX: 'rate_limit:'
+      LIMITER_WINDOW_SECONDS: 60
 
     services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
       mysql:
         image: mysql:8.0
         env:

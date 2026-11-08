@@ -43,6 +43,7 @@ export default defineConfig({
     () => import('@adonisjs/lucid/database_provider'),
     () => import('@adonisjs/auth/auth_provider'),
     () => import('@adonisjs/bouncer/bouncer_provider'),
+    () => import('@adonisjs/redis/redis_provider'),
     () => import('@adonisjs/limiter/limiter_provider'),
   ],
 

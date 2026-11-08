@@ -3,11 +3,11 @@ import { generateRoleUser } from '#tests/data/users/role_user';
 import { CreateUser } from '#tests/data/users/user';
 import { orderCreateWithUnavailableStock } from '#tests/data/orders/order_create_with_unavailable_stock';
 import { test } from '@japa/runner';
-import db from '@adonisjs/lucid/services/db';
+import clearRateLimits from '#tests/helpers/clear_rate_limits';
 
 test.group('Unified error response', (group) => {
   group.each.setup(async () => {
-    await db.from('rate_limits').delete();
+    await clearRateLimits();
   });
 
   test('returns a standard not-found error', async ({ client, assert }) => {
