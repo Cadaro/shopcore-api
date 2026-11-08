@@ -1,12 +1,12 @@
 import { Token, TokenTypeEnum } from '#types/token';
 import { UserData } from '#types/user';
 import { test } from '@japa/runner';
-import db from '@adonisjs/lucid/services/db';
+import clearRateLimits from '#tests/helpers/clear_rate_limits';
 
 const userAuthData = { email: 'test@example.com', password: 'Test123' };
 test.group('Users create', (group) => {
   group.each.setup(async () => {
-    await db.from('rate_limits').delete();
+    await clearRateLimits();
   });
 
   test('create new user', async ({ client, assert }) => {

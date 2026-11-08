@@ -4,13 +4,20 @@ import { defineConfig, stores } from '@adonisjs/limiter';
 const limiterConfig = defineConfig({
   default: env.get('LIMITER_STORE'),
   stores: {
-    // Store rate limit counters in the database.
+    // Keep the database store available for a controlled rollback.
     database: stores.database({
       tableName: 'rate_limits',
     }),
 
-    // Use in-memory counters for tests.
-    memory: stores.memory({}),
+    redis: stores.redis({
+      connectionName: 'main',
+      keyPrefix: env.get('LIMITER_KEY_PREFIX'),
+      rejectIfRedisNotReady: true,
+    }),
+
+    memory: stores.memory({
+      keyPrefix: env.get('LIMITER_KEY_PREFIX'),
+    }),
   },
 });
 

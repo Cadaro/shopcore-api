@@ -6,11 +6,11 @@ import { generateRoleAdmin } from '#tests/data/users/role_admin';
 import { generateRoleUser } from '#tests/data/users/role_user';
 import { Role } from '#types/enum/role';
 import { newItemWithoutItemId } from '../../data/items/new_item_without_item_id.js';
-import db from '@adonisjs/lucid/services/db';
+import clearRateLimits from '#tests/helpers/clear_rate_limits';
 
 test.group('Roles and permissions', (group) => {
   group.each.setup(async () => {
-    await db.from('rate_limits').delete();
+    await clearRateLimits();
   });
 
   async function createToken(user: User) {

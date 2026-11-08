@@ -32,8 +32,15 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   /*
   |----------------------------------------------------------
-  | Variables for configuring the limiter package
+  | Variables for configuring Redis and the limiter package
   |----------------------------------------------------------
   */
-  LIMITER_STORE: Env.schema.enum(['database', 'memory'] as const),
+  REDIS_HOST: Env.schema.string({ format: 'host' }),
+  REDIS_PORT: Env.schema.number(),
+  REDIS_PASSWORD: Env.schema.string.optional(),
+  REDIS_DB: Env.schema.number(),
+  REDIS_KEY_PREFIX: Env.schema.string(),
+  LIMITER_STORE: Env.schema.enum(['redis', 'database', 'memory'] as const),
+  LIMITER_KEY_PREFIX: Env.schema.string(),
+  LIMITER_WINDOW_SECONDS: Env.schema.number(),
 });

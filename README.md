@@ -66,6 +66,27 @@ respectively. Wait until MySQL is ready before running database commands:
 docker exec shopcore-mysql mysqladmin ping -h 127.0.0.1 -uroot -plocal_dev_password --silent
 ```
 
+## Preparing Redis
+
+Rate-limit counters are stored in Redis. Start a local Redis instance:
+
+```
+docker run --name shopcore-redis -p 6379:6379 -d redis:7-alpine
+```
+
+Configure `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_DB`, and
+`REDIS_KEY_PREFIX` in `.env`. The application defaults to `LIMITER_STORE=redis`,
+uses `LIMITER_KEY_PREFIX` to namespace limiter keys, and sets counter expiry from
+`LIMITER_WINDOW_SECONDS` (60 seconds by default). On Redis connection failures,
+requests to ordinary endpoints are logged at fatal level and continue without
+rate limiting. Endpoints that require an `Idempotency-Key` must opt into the
+fail-closed limiter policy and return a logged `503` during Redis outages,
+preventing duplicate non-idempotent operations.
+
+The Redis limiter clears its selected database in functional-test setup. Use a
+dedicated Redis database for tests (for example, `REDIS_DB=1`) and do not point
+the test environment at a Redis database shared with other applications.
+
 Run migrations to create the tables, then seed the example stock items:
 
 ```
@@ -75,18 +96,26 @@ node ace db:seed
 
 ## Running tests locally
 
-Use the MySQL database above (or another MySQL 8.0 instance) and set the five
-database variables in `.env` to its connection details. Set `LIMITER_STORE=database`
-for the functional tests, which isolate rate-limit counters in MySQL. The test
-bootstrap runs migrations and seeders before the suite:
+Use the MySQL and Redis instances above and set their connection variables in
+`.env`. Set `REDIS_DB=1` for the functional tests so their limiter cleanup is
+isolated from application data. The test bootstrap runs migrations and seeders
+before the suite:
 
 ```
 npm test
 ```
 
-The CI workflow uses the same `mysql:8.0` image and runs `npm test` against it.
-To remove the local test database container when finished, run
-`docker rm -f shopcore-mysql`.
+The CI workflow runs `npm test` against MySQL and Redis services. To remove the
+local database containers when finished, run
+`docker rm -f shopcore-mysql shopcore-redis`.
+
+### Rate-limit rollback
+
+The `rate_limits` table migration remains available for rollback. To switch back
+to database-backed counters, set `LIMITER_STORE=database` and restart the
+application. The limiter does not copy active Redis counters into MySQL, so
+requests receive a fresh database-backed window after the switch. Redis keys
+expire automatically according to the configured limiter window.
 
 ### Money storage migration
 
