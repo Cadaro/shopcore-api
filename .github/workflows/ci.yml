@@ -93,26 +93,10 @@ jobs:
           echo "❌ MySQL failed to start"
           exit 1
 
-      - name: Run migrations
-        env:
-          TZ: UTC
-          PORT: 3333
-          HOST: localhost
-          LOG_LEVEL: info
-          PROTOCOL: HTTP
-          APP_KEY: ${{ secrets.APP_KEY }}
-          NODE_ENV: test
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_USER: root
-          DB_PASSWORD: ci_mysql_root_password
-          DB_DATABASE: shopcore_test
-        run: node ace migration:run --force
-
       - name: Run tests
         env:
           TZ: UTC
-          PORT: 3333
+          PORT: 3334
           HOST: localhost
           LOG_LEVEL: info
           PROTOCOL: HTTP
@@ -123,12 +107,12 @@ jobs:
           DB_USER: root
           DB_PASSWORD: ci_mysql_root_password
           DB_DATABASE: shopcore_test
-        run: npm test
+        run: npm run test:ci
 
       - name: Run tests with coverage
         env:
           TZ: UTC
-          PORT: 3333
+          PORT: 3334
           HOST: localhost
           LOG_LEVEL: info
           PROTOCOL: HTTP
@@ -139,7 +123,7 @@ jobs:
           DB_USER: root
           DB_PASSWORD: ci_mysql_root_password
           DB_DATABASE: shopcore_test
-        run: npm run test:coverage
+        run: npm run test:coverage:ci
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3

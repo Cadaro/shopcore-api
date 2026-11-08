@@ -38,76 +38,79 @@ git clone https://github.com/Cadaro/shopcore-api.git
 npm ci
 ```
 
-Copy `.env.example` to `.env`, then generate a secure application key:
+Create separate local configuration files, then generate an application key:
 
 ```
 cp .env.example .env
+cp .env.example .env.development.local
+cp .env.test.example .env.test
 node ace generate:key
 ```
 
-## Preparing the MySQL database
+Copy the generated `APP_KEY` from `.env` into both local configuration files.
+Set your own local database and Redis passwords in those files. These files are
+ignored by Git. Docker Compose v2 with support for `up --wait` is required.
 
-The application requires MySQL 8.0. Start a local database with Docker:
+## Local development
 
-```
-docker run --name shopcore-mysql \
-  -e MYSQL_ROOT_PASSWORD=local_dev_password \
-  -e MYSQL_DATABASE=shopcore_test \
-  -p 3306:3306 \
-  -d mysql:8.0
-```
-
-Configure the MySQL connection in `.env` using `DB_HOST`, `DB_PORT`, `DB_USER`,
-`DB_PASSWORD`, and `DB_DATABASE`. For the Docker command above, use
-`127.0.0.1`, `3306`, `root`, `local_dev_password`, and `shopcore_test`,
-respectively. Wait until MySQL is ready before running database commands:
+Start the development MySQL and Redis containers and the API:
 
 ```
-docker exec shopcore-mysql mysqladmin ping -h 127.0.0.1 -uroot -plocal_dev_password --silent
+npm run dev
 ```
 
-## Preparing Redis
-
-Rate-limit counters are stored in Redis. Start a local Redis instance:
-
-```
-docker run --name shopcore-redis -p 6379:6379 -d redis:7-alpine
-```
-
-Configure `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_DB`, and
-`REDIS_KEY_PREFIX` in `.env`. The application defaults to `LIMITER_STORE=redis`,
-uses `LIMITER_KEY_PREFIX` to namespace limiter keys, and sets counter expiry from
-`LIMITER_WINDOW_SECONDS` (60 seconds by default). On Redis connection failures,
-requests to ordinary endpoints are logged at fatal level and continue without
-rate limiting. Endpoints that require an `Idempotency-Key` must opt into the
-fail-closed limiter policy and return a logged `503` during Redis outages,
-preventing duplicate non-idempotent operations.
-
-The Redis limiter clears its selected database in functional-test setup. Use a
-dedicated Redis database for tests (for example, `REDIS_DB=1`) and do not point
-the test environment at a Redis database shared with other applications.
-
-Run migrations to create the tables, then seed the example stock items:
+The API listens on port 3333. MySQL and Redis use ports 3306 and 6379.
+On the first run, leave the containers running and run migrations and the
+development seed in another terminal:
 
 ```
-node ace migration:run
-node ace db:seed
+NODE_ENV=development node ace migration:run
+NODE_ENV=development node ace db:seed
 ```
+
+Stop the API with Ctrl+C. To stop the containers without deleting their data:
+
+```
+npm run dev:stop
+```
+
+Compose initializes MySQL credentials and the database only when a volume is
+first created. Changing credentials later requires updating the existing MySQL
+instance or explicitly recreating its volume. The `shopcore-dev` and
+`shopcore-test` projects have separate volumes. Volumes from older Compose
+project names are not deleted or automatically migrated.
+
+Rate-limit counters use Redis, `LIMITER_KEY_PREFIX`, and
+`LIMITER_WINDOW_SECONDS`. On Redis connection failures, ordinary endpoints log
+at fatal level and continue without rate limiting. Endpoints requiring an
+`Idempotency-Key` must opt into the fail-closed policy.
 
 ## Running tests locally
 
-Use the MySQL and Redis instances above and set their connection variables in
-`.env`. Set `REDIS_DB=1` for the functional tests so their limiter cleanup is
-isolated from application data. The test bootstrap runs migrations and seeders
-before the suite:
+Tests use separate MySQL and Redis instances on ports 3307 and 6380, and a
+test HTTP server on port 3334. They can run while the development API is
+running:
 
 ```
 npm test
 ```
 
-The CI workflow runs `npm test` against MySQL and Redis services. To remove the
-local database containers when finished, run
-`docker rm -f shopcore-mysql shopcore-redis`.
+The command starts the test services, waits for health checks, and runs tests.
+The test bootstrap deletes **all tables and views** in the dedicated
+`shopcore_test` database and flushes Redis database 1 before running migrations
+and seeders. Cleanup runs again after the suite. If the process is interrupted,
+the next run resets the services before testing. The reset refuses unexpected
+hosts, ports, database names, and Redis databases. Never use these test
+databases for other data.
+
+Use `npm run test:watch` for watch mode or `npm run test:coverage` for coverage.
+To stop the test containers without deleting volumes, run `npm run test:stop`.
+To explicitly remove the test containers **and their volumes**, run
+`npm run test:clean`.
+
+In CI, `npm run test:ci` and `npm run test:coverage:ci` use separately provided
+services instead of starting Compose. The CI configuration uses MySQL on 3306
+and Redis on 6379, with the same test database names.
 
 ### Rate-limit rollback
 

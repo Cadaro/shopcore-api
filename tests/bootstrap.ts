@@ -6,6 +6,8 @@ import type { Config } from '@japa/runner/types';
 import { pluginAdonisJS } from '@japa/plugin-adonisjs';
 import testUtils from '@adonisjs/core/services/test_utils';
 import { authApiClient } from '@adonisjs/auth/plugins/api_client';
+import { resetTestServices } from '#tests/helpers/reset_test_services';
+import env from '#start/env';
 
 /**
  * This file is imported by the "bin/test.ts" entrypoint file
@@ -17,7 +19,7 @@ import { authApiClient } from '@adonisjs/auth/plugins/api_client';
  */
 export const plugins: Config['plugins'] = [
   assert(),
-  apiClient('http://localhost:3333'),
+  apiClient(`http://localhost:${env.get('PORT')}`),
   pluginAdonisJS(app),
   authApiClient(app),
   expectTypeOf(),
@@ -31,7 +33,39 @@ export const plugins: Config['plugins'] = [
  * The teardown functions are executer after all the tests
  */
 export const runnerHooks: Required<Pick<Config, 'setup' | 'teardown'>> = {
-  setup: [() => testUtils.db().migrate(), () => testUtils.db().seed()],
+  setup: [
+    async () => {
+      await resetTestServices();
+      try {
+        const rollback = await testUtils.db().migrate();
+        await testUtils.db().seed();
+
+        return async () => {
+          try {
+            await rollback();
+          } catch (error) {
+            try {
+              await resetTestServices();
+            } catch (cleanupError) {
+              throw new AggregateError(
+                [error, cleanupError],
+                'Test rollback and cleanup both failed'
+              );
+            }
+            throw error;
+          }
+          await resetTestServices();
+        };
+      } catch (error) {
+        try {
+          await resetTestServices();
+        } catch (cleanupError) {
+          throw new AggregateError([error, cleanupError], 'Test setup and cleanup both failed');
+        }
+        throw error;
+      }
+    },
+  ],
   teardown: [],
 };
 

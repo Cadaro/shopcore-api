@@ -8,12 +8,18 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "node ace serve --watch",
+    "dev": "docker compose -p shopcore-dev --env-file .env.development.local up -d --wait --wait-timeout 180 && NODE_ENV=development node ace serve --watch",
+    "dev:stop": "docker compose -p shopcore-dev --env-file .env.development.local stop",
     "build": "node ace build",
     "start": "node build/bin/server.js",
-    "test": "node ace test",
-    "test:coverage": "c8 node ace test",
-    "test:watch": "node ace test --watch",
+    "test": "npm run test:services && npm run test:ci --",
+    "test:services": "docker compose -p shopcore-test --env-file .env.test up -d --wait --wait-timeout 180",
+    "test:ci": "NODE_ENV=test node ace test",
+    "test:coverage": "npm run test:services && npm run test:coverage:ci --",
+    "test:coverage:ci": "NODE_ENV=test c8 node ace test",
+    "test:watch": "npm run test:services && NODE_ENV=test node ace test --watch",
+    "test:stop": "docker compose -p shopcore-test --env-file .env.test stop",
+    "test:clean": "docker compose -p shopcore-test --env-file .env.test down -v",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
@@ -64,6 +70,7 @@
     "prettier": "^3.9.10",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.72.0",
+    "wait-on": "^9.5.1",
     "youch": "^4.1.1"
   },
   "dependencies": {
