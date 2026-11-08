@@ -59,7 +59,7 @@ Start the development MySQL and Redis containers and the API:
 npm run dev
 ```
 
-The API listens on port 3334. MySQL and Redis use ports 3306 and 6379.
+The API listens on port 3333. MySQL and Redis use ports 3306 and 6379.
 On the first run, leave the containers running and run migrations and the
 development seed in another terminal:
 
@@ -88,7 +88,7 @@ at fatal level and continue without rate limiting. Endpoints requiring an
 ## Running tests locally
 
 Tests use separate MySQL and Redis instances on ports 3307 and 6380, and a
-test HTTP server on port 3333. They can run while the development API is
+test HTTP server on port 3334. They can run while the development API is
 running:
 
 ```

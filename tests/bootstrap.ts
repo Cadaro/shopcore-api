@@ -7,6 +7,7 @@ import { pluginAdonisJS } from '@japa/plugin-adonisjs';
 import testUtils from '@adonisjs/core/services/test_utils';
 import { authApiClient } from '@adonisjs/auth/plugins/api_client';
 import { resetTestServices } from '#tests/helpers/reset_test_services';
+import env from '#start/env';
 
 /**
  * This file is imported by the "bin/test.ts" entrypoint file
@@ -18,7 +19,7 @@ import { resetTestServices } from '#tests/helpers/reset_test_services';
  */
 export const plugins: Config['plugins'] = [
   assert(),
-  apiClient('http://localhost:3333'),
+  apiClient(`http://localhost:${env.get('PORT')}`),
   pluginAdonisJS(app),
   authApiClient(app),
   expectTypeOf(),
