@@ -81,9 +81,38 @@ instance or explicitly recreating its volume. The `shopcore-dev` and
 project names are not deleted or automatically migrated.
 
 Rate-limit counters use Redis, `LIMITER_KEY_PREFIX`, and
-`LIMITER_WINDOW_SECONDS`. On Redis connection failures, ordinary endpoints log
-at fatal level and continue without rate limiting. Endpoints requiring an
-`Idempotency-Key` must opt into the fail-closed policy.
+`LIMITER_WINDOW_SECONDS`. Login requests are also limited per normalized email
+using a SHA-256 Redis key; `AUTH_LOGIN_ACCOUNT_LIMIT` and
+`AUTH_LOGIN_ACCOUNT_WINDOW_SECONDS` default to 5 failed attempts per 15 minutes.
+A successful login clears that account's failed-attempt counter.
+
+### Reverse proxy deployments
+
+AdonisJS trusts only the proxy addresses listed in `TRUSTED_PROXIES`. The
+default `loopback` value is suitable for local development; set this variable to
+the exact proxy addresses or CIDRs used by the deployment (for example,
+`172.18.0.0/16,127.0.0.1,::1` for a known Docker network). Inspect the actual
+Docker network subnet rather than copying that example blindly. Do not use
+`true` or trust all addresses: clients could forge forwarded IP headers.
+
+Configure Nginx to pass the client and scheme information to the API:
+
+```nginx
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-Proto $scheme;
+proxy_set_header Host $host;
+```
+
+AdonisJS resolves `request.ip()` from `X-Forwarded-For` when the connecting
+proxy is trusted. If Cloudflare is in front of Nginx, configure Nginx's real-IP
+module to use `CF-Connecting-IP` and trust only Cloudflare's published proxy
+CIDRs; Nginx can then forward the resolved address using the headers above.
+Do not have the API trust `CF-Connecting-IP` directly from arbitrary clients.
+
+On Redis connection failures, ordinary endpoints log at fatal level and
+continue without rate limiting. Endpoints requiring an `Idempotency-Key` must
+opt into the fail-closed policy.
 
 ## Running tests locally
 

@@ -1,5 +1,6 @@
 import app from '@adonisjs/core/services/app';
 import { defineConfig } from '@adonisjs/core/http';
+import env from '#start/env';
 
 /**
  * The configuration settings used by the HTTP server
@@ -7,6 +8,7 @@ import { defineConfig } from '@adonisjs/core/http';
 export const http = defineConfig({
   generateRequestId: true,
   allowMethodSpoofing: false,
+  trustProxy: env.get('TRUSTED_PROXIES', 'loopback'),
 
   /**
    * Enabling async local storage will let you access HTTP context

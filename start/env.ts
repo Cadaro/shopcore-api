@@ -18,6 +18,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   HOST: Env.schema.string({ format: 'host' }),
   LOG_LEVEL: Env.schema.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']),
   PROTOCOL: Env.schema.enum(['HTTPS', 'HTTP']),
+  TRUSTED_PROXIES: Env.schema.string.optional(),
 
   /*
   |----------------------------------------------------------
@@ -43,4 +44,6 @@ export default await Env.create(new URL('../', import.meta.url), {
   LIMITER_STORE: Env.schema.enum(['redis', 'database', 'memory'] as const),
   LIMITER_KEY_PREFIX: Env.schema.string(),
   LIMITER_WINDOW_SECONDS: Env.schema.number(),
+  AUTH_LOGIN_ACCOUNT_LIMIT: Env.schema.number.optional(),
+  AUTH_LOGIN_ACCOUNT_WINDOW_SECONDS: Env.schema.number.optional(),
 });

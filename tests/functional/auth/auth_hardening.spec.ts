@@ -12,7 +12,7 @@ test.group('Authentication hardening', (group) => {
   test('limits repeated failed login attempts', async ({ client }) => {
     for (let attempt = 0; attempt < 10; attempt++) {
       const response = await client.post('/api/auth/token').json({
-        email: 'unknown@example.com',
+        email: `unknown-${attempt}@example.com`,
         password: 'invalid-password',
       });
 
@@ -20,7 +20,7 @@ test.group('Authentication hardening', (group) => {
     }
 
     const limitedResponse = await client.post('/api/auth/token').json({
-      email: 'unknown@example.com',
+      email: 'unknown-limited@example.com',
       password: 'invalid-password',
     });
 
@@ -29,6 +29,82 @@ test.group('Authentication hardening', (group) => {
       code: 'TOO_MANY_REQUESTS',
       message: 'Too many requests',
     });
+  });
+
+  test('locks an account after failed attempts from different IP addresses', async ({ client }) => {
+    const email = `distributed-${Date.now()}@example.com`;
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const response = await client
+        .post('/api/auth/token')
+        .header('X-Forwarded-For', `198.51.100.${attempt + 1}`)
+        .json({
+          email: attempt % 2 === 0 ? email : email.toUpperCase(),
+          password: 'invalid-password',
+        });
+
+      response.assertStatus(401);
+    }
+
+    const limitedResponse = await client
+      .post('/api/auth/token')
+      .header('X-Forwarded-For', '198.51.100.6')
+      .json({ email, password: 'invalid-password' });
+
+    limitedResponse.assertStatus(429);
+    limitedResponse.assertBodyContains({
+      code: 'TOO_MANY_REQUESTS',
+      message: 'Too many requests',
+    });
+  });
+
+  test('successful login resets the account failed-attempt counter', async ({ client }) => {
+    const userData = generateRoleUser();
+    await new CreateUser(userData).create();
+
+    for (let attempt = 0; attempt < 4; attempt++) {
+      const response = await client
+        .post('/api/auth/token')
+        .header('X-Forwarded-For', `198.51.100.${attempt + 1}`)
+        .json({ email: userData.email, password: 'invalid-password' });
+
+      response.assertStatus(401);
+    }
+
+    const successfulResponse = await client
+      .post('/api/auth/token')
+      .header('X-Forwarded-For', '198.51.100.5')
+      .json({ email: userData.email, password: userData.password });
+    successfulResponse.assertStatus(200);
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const response = await client
+        .post('/api/auth/token')
+        .header('X-Forwarded-For', `198.51.100.${attempt + 6}`)
+        .json({ email: userData.email, password: 'invalid-password' });
+
+      response.assertStatus(401);
+    }
+
+    const limitedResponse = await client
+      .post('/api/auth/token')
+      .header('X-Forwarded-For', '198.51.100.11')
+      .json({ email: userData.email, password: 'invalid-password' });
+    limitedResponse.assertStatus(429);
+  });
+
+  test('uses trusted forwarded client IPs for the IP login limiter', async ({ client }) => {
+    for (let attempt = 0; attempt < 11; attempt++) {
+      const response = await client
+        .post('/api/auth/token')
+        .header('X-Forwarded-For', `198.51.100.${attempt + 1}`)
+        .json({
+          email: `proxy-ip-${Date.now()}-${attempt}@example.com`,
+          password: 'invalid-password',
+        });
+
+      response.assertStatus(401);
+    }
   });
 
   test('limits public registration', async ({ client }) => {
