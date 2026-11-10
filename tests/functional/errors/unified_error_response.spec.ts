@@ -6,12 +6,19 @@ import { test } from '@japa/runner';
 import clearRateLimits from '#tests/helpers/clear_rate_limits';
 
 test.group('Unified error response', (group) => {
+  let guestToken: string;
+
   group.each.setup(async () => {
     await clearRateLimits();
   });
 
   test('returns a standard not-found error', async ({ client, assert }) => {
-    const response = await client.get('/api/stocks/not-a-real-stock-item');
+    const guestSession = await client.post('/api/v1/guests');
+    guestSession.assertStatus(201);
+    guestToken = guestSession.body().guest_token;
+    const response = await client
+      .get('/api/stocks/not-a-real-stock-item')
+      .header('X-Guest-Token', guestToken);
     const body = response.body();
 
     response.assertStatus(404);

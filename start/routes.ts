@@ -15,21 +15,22 @@ import TokenController from '#controllers/token_controller';
 import UsersController from '#controllers/users_controller';
 import StocksController from '#controllers/stocks_controller';
 import InvoiceCustomersController from '#controllers/invoice_customers_controller';
+import GuestsController from '#controllers/guests_controller';
 import { Permission } from '#types/enum/permission';
-import { loginThrottle, registrationThrottle } from '#start/limiter';
+import { guestSessionCreationThrottle, loginThrottle, registrationThrottle } from '#start/limiter';
 
 router
   .group(() => {
+    router.post('v1/guests', [GuestsController, 'store']).use(guestSessionCreationThrottle);
     router.group(() => {
       router
         .resource('stocks', StocksController)
         .params({ stocks: 'itemId' })
         .apiOnly()
         .only(['index', 'show', 'store', 'update'])
-        .use(
-          ['store', 'update'],
-          middleware.permission({ permission: Permission.PRODUCTS_MANAGE })
-        );
+        .use(['store', 'update'], middleware.permission({ permission: Permission.PRODUCTS_MANAGE }))
+        .use('index', middleware.businessRateLimit({ group: 'read', allowGuests: true }))
+        .use('show', middleware.businessRateLimit({ group: 'read', allowGuests: true }));
       router
         .resource('orders', OrdersController)
         .params({ orders: 'orderId' })
@@ -37,10 +38,14 @@ router
         .only(['index', 'store', 'show'])
         .use('index', middleware.permission({ permission: Permission.ORDERS_VIEW }))
         .use('store', middleware.permission({ permission: Permission.ORDERS_CREATE }))
-        .use('show', middleware.permission({ permission: Permission.ORDERS_VIEW }));
+        .use('show', middleware.permission({ permission: Permission.ORDERS_VIEW }))
+        .use('index', middleware.businessRateLimit({ group: 'read' }))
+        .use('store', middleware.businessRateLimit({ group: 'write' }))
+        .use('show', middleware.businessRateLimit({ group: 'read' }));
       router
         .get('orders/:orderId/status-history', [OrderStatusController, 'history'])
-        .use(middleware.permission({ permission: Permission.ORDERS_VIEW }));
+        .use(middleware.permission({ permission: Permission.ORDERS_VIEW }))
+        .use(middleware.businessRateLimit({ group: 'read' }));
       router
         .resource('customers/invoice-data', InvoiceCustomersController)
         .apiOnly()
@@ -48,7 +53,9 @@ router
         .use(
           ['index', 'store'],
           middleware.permission({ permission: Permission.INVOICE_DATA_MANAGE })
-        );
+        )
+        .use('index', middleware.businessRateLimit({ group: 'read' }))
+        .use('store', middleware.businessRateLimit({ group: 'write' }));
       router
         .put('customers/invoice-data', [InvoiceCustomersController, 'update'])
         .use(middleware.permission({ permission: Permission.INVOICE_DATA_MANAGE }));

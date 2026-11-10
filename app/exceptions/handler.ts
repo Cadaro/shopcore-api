@@ -142,6 +142,8 @@ function getHttpErrorCode(status: number): string {
       return 'CONFLICT';
     case 422:
       return 'VALIDATION_ERROR';
+    case 428:
+      return 'PRECONDITION_REQUIRED';
     default:
       return 'HTTP_ERROR';
   }

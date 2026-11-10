@@ -17,6 +17,10 @@ This platform is actively developed and expanding with new features to meet vari
 
 The API supports `customer`, `staff`, and `admin` roles. Customers can access customer-facing order, product, profile, and invoice-data operations. Staff can also manage products and orders. Admins have all permissions, including assigning roles with `PATCH /api/auth/users/{userId}/role`. Route permissions are documented in the OpenAPI specification.
 
+# Guest sessions and rate limits
+
+Anonymous stock requests require a guest session. Create one with `POST /api/v1/guests`, then send its `guest_token` as the `X-Guest-Token` header on anonymous stock requests. Guest tokens are stored in Redis and expire after 24 hours by default. The guest-session endpoint is limited by client IP; business endpoint limits use customer access tokens or guest tokens, with separate read and write buckets. Defaults are 600 customer reads and 120 customer writes per five minutes, and 300 guest reads and 80 guest writes per five minutes. These values, the guest-session TTL, and guest creation IP limit can be configured through environment variables. Throttled responses do not disclose retry timing in a `Retry-After` header; requests are accepted again after the applicable rate-limit window expires.
+
 # Upcoming Features
 
 - 🚚 Multiple courier gateway integrations
@@ -180,7 +184,14 @@ node ace list:routes
 1. List all items in online-shop
 
 ```
+curl --location --request POST 'localhost:3333/api/v1/guests'
+```
+
+Use the returned `guest_token` to list items:
+
+```
 curl --location 'localhost:3333/api/stocks' \
+--header 'X-Guest-Token: <guest_token>'
 ```
 
 2. Create user account
