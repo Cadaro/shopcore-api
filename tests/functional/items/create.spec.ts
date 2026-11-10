@@ -14,8 +14,22 @@ import StockPrice from '#models/stock_price';
 import StockService from '#services/stock_service';
 import { Currency } from '#types/enum/currency_code';
 import db from '@adonisjs/lucid/services/db';
+import redis from '@adonisjs/redis/services/main';
+import env from '#start/env';
 
-test.group('Items create', () => {
+test.group('Items create', (group) => {
+  let guestToken: string;
+
+  group.each.setup(async () => {
+    guestToken = randomUUID();
+    await redis.set(
+      `guest-session:${guestToken}`,
+      '1',
+      'EX',
+      env.get('GUEST_SESSION_TTL_SECONDS', 86400)
+    );
+  });
+
   async function createTokenForUser(user: InstanceType<typeof User>) {
     const tokenService = new TokenService();
     return await tokenService.createToken(user);
@@ -110,7 +124,7 @@ test.group('Items create', () => {
         ['PLN', 902, 0.23],
       ]
     );
-    const show = await client.get(`/api/stocks/${body.itemId}`);
+    const show = await client.get(`/api/stocks/${body.itemId}`).header('X-Guest-Token', guestToken);
     show.assertStatus(200);
     assert.deepEqual(show.body().prices, [
       { currency: 'EUR', price: 9.99, vatAmount: 2.09, vatRate: 0.21 },
@@ -185,7 +199,9 @@ test.group('Items create', () => {
       .json({ ...newItemWithoutItemId, sku })
       .bearerToken(token.token);
     first.assertStatus(201);
-    const show = await client.get(`/api/stocks/${first.body().itemId}`);
+    const show = await client
+      .get(`/api/stocks/${first.body().itemId}`)
+      .header('X-Guest-Token', guestToken);
     assert.equal(show.body().sku, sku);
     const second = await client
       .post('/api/stocks')
@@ -237,7 +253,7 @@ test.group('Items create', () => {
       })
       .bearerToken(token.token);
     invalidUpdate.assertStatus(422);
-    const detail = await client.get(`/api/stocks/${itemId}`);
+    const detail = await client.get(`/api/stocks/${itemId}`).header('X-Guest-Token', guestToken);
     assert.deepEqual(detail.body().prices, replacement.prices);
   });
 

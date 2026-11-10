@@ -52,6 +52,12 @@ export class UnauthorizedException extends DomainException {
   }
 }
 
+export class PreconditionRequiredException extends DomainException {
+  constructor(message: string) {
+    super(message, 'PRECONDITION_REQUIRED', 428);
+  }
+}
+
 export class DomainRuleException extends DomainException {
   constructor(message: string, details?: ErrorDetail[]) {
     super(message, 'DOMAIN_RULE_VIOLATION', 422, details);

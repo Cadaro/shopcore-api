@@ -6,6 +6,7 @@ import env from '#start/env';
 
 interface RateLimiterFailureOptions {
   idempotencyKeyRequired?: boolean;
+  failClosed?: boolean;
 }
 
 const redisConnectionErrorCodes = new Set([
@@ -20,7 +21,7 @@ const redisConnectionErrorCodes = new Set([
 export function rateLimiterWithFailurePolicy(
   name: string,
   middleware: MiddlewareFn,
-  { idempotencyKeyRequired = false }: RateLimiterFailureOptions = {}
+  { idempotencyKeyRequired = false, failClosed = false }: RateLimiterFailureOptions = {}
 ): MiddlewareFn {
   return async (ctx, next) => {
     let limiterPassed = false;
@@ -45,19 +46,21 @@ export function rateLimiterWithFailurePolicy(
       }
 
       logger.fatal(
-        { err: error, limiter: name, idempotencyKeyRequired },
-        idempotencyKeyRequired
-          ? 'Redis rate limiter unavailable; rejecting idempotent request'
+        { err: error, limiter: name, idempotencyKeyRequired, failClosed },
+        idempotencyKeyRequired || failClosed
+          ? 'Redis rate limiter unavailable; rejecting request'
           : 'Redis rate limiter unavailable; allowing request'
       );
 
-      if (!idempotencyKeyRequired) {
+      if (!idempotencyKeyRequired && !failClosed) {
         return next();
       }
 
       return ctx.response.status(503).json({
         code: 'SERVICE_UNAVAILABLE',
-        message: 'Request could not be safely processed while Redis is unavailable',
+        message: idempotencyKeyRequired
+          ? 'Request could not be safely processed while Redis is unavailable'
+          : 'Rate limiting is unavailable',
       });
     }
   };
@@ -109,4 +112,37 @@ export const registrationThrottle = rateLimiterWithFailurePolicy(
   limiter.define('auth-registration', () => {
     return limiter.allowRequests(10).every(env.get('LIMITER_WINDOW_SECONDS'));
   })
+);
+
+const businessRateLimitWindowSeconds = env.get('BUSINESS_RATE_LIMIT_WINDOW_SECONDS', 300);
+
+export const customerReadLimiter = limiter.use('redis', {
+  requests: env.get('CUSTOMER_READ_RATE_LIMIT', 600),
+  duration: businessRateLimitWindowSeconds,
+});
+
+export const customerWriteLimiter = limiter.use('redis', {
+  requests: env.get('CUSTOMER_WRITE_RATE_LIMIT', 120),
+  duration: businessRateLimitWindowSeconds,
+});
+
+export const guestReadLimiter = limiter.use('redis', {
+  requests: env.get('GUEST_READ_RATE_LIMIT', 300),
+  duration: businessRateLimitWindowSeconds,
+});
+
+export const guestWriteLimiter = limiter.use('redis', {
+  requests: env.get('GUEST_WRITE_RATE_LIMIT', 80),
+  duration: businessRateLimitWindowSeconds,
+});
+
+export const guestSessionCreationThrottle = rateLimiterWithFailurePolicy(
+  'guest-session-creation',
+  limiter.define('guest-session-creation', () =>
+    limiter
+      .allowRequests(env.get('GUEST_SESSION_CREATE_RATE_LIMIT', 10))
+      .every(env.get('GUEST_SESSION_CREATE_WINDOW_SECONDS', 60))
+      .store('redis')
+  ),
+  { failClosed: true }
 );

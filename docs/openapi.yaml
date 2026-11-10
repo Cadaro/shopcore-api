@@ -20,6 +20,9 @@ info:
     from greater precision and VAT calculations are rounded to the nearest minor unit, with
     half values rounded away from zero. VAT rates are decimal fractions (0.23 means 23%).
     Order summary totals cover item prices multiplied by quantities; delivery is not included.
+
+    ## Guest sessions and rate limits
+    Anonymous stock requests must first call `POST /api/v1/guests` and send the returned `guest_token` as the `X-Guest-Token` header. Guest sessions expire after 24 hours by default. Guest-session creation is limited by client IP; business endpoint requests are limited by customer access token or guest token, with separate read and write buckets. Default business limits are 600 customer reads, 120 customer writes, 300 guest reads, and 80 guest writes per five minutes. Throttled responses do not disclose retry timing; requests are accepted again after the applicable rate-limit window expires.
   version: '1.0.0'
   contact:
     name: ShopCore API Support
@@ -40,6 +43,8 @@ tags:
     description: Stock listing and creation
   - name: orders
     description: Orders management for authenticated users
+  - name: guests
+    description: Guest session initialization
 components:
   securitySchemes:
     bearerAuth:
@@ -53,6 +58,12 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/InternalServerException'
+    TooManyRequests:
+      description: Rate limit exceeded. Retry timing is not disclosed; requests are accepted again after the applicable rate-limit window expires.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TooManyRequestsException'
   schemas:
     ErrorDetail:
       type: object
@@ -130,6 +141,30 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ErrorDetail'
+    PreconditionRequiredException:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: PRECONDITION_REQUIRED
+        message:
+          type: string
+          example: Guest session is required. Initialize one with POST /api/v1/guests.
+    TooManyRequestsException:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: TOO_MANY_REQUESTS
+        message:
+          type: string
+          example: Too many requests
     DomainRuleException:
       type: object
       required:
@@ -944,12 +979,40 @@ paths:
         default:
           $ref: '#/components/responses/InternalServerError'
 
+  /api/v1/guests:
+    post:
+      tags:
+        - guests
+      summary: Initialize a guest session
+      description: Create a UUID guest token stored in Redis for 24 hours by default. Limited by client IP (10 requests per minute by default).
+      responses:
+        '201':
+          description: Guest session created
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - guest_token
+                  - expires_at
+                properties:
+                  guest_token:
+                    type: string
+                    format: uuid
+                  expires_at:
+                    type: string
+                    format: date-time
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        default:
+          $ref: '#/components/responses/InternalServerError'
+
   /api/customers/invoice-data:
     get:
       tags:
         - customer-invoice-data
       summary: Get customer (user) invoice data
-      description: Returns the authenticated user's invoice data. Requires `customers.invoice_data.manage`.
+      description: Returns the authenticated user's invoice data. Requires `customers.invoice_data.manage`. Customer read requests are rate limited by access token.
       x-required-permission: customers.invoice_data.manage
       security:
         - bearerAuth: []
@@ -967,6 +1030,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundException'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         default:
           $ref: '#/components/responses/InternalServerError'
 
@@ -974,7 +1039,7 @@ paths:
       tags:
         - customer-invoice-data
       summary: Create new customer (user) invoice data related to userId
-      description: Create invoice data for the authenticated user. Requires `customers.invoice_data.manage`.
+      description: Create invoice data for the authenticated user. Requires `customers.invoice_data.manage`. Customer write requests are rate limited by access token.
       x-required-permission: customers.invoice_data.manage
       security:
         - bearerAuth: []
@@ -1006,6 +1071,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainRuleException'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         default:
           $ref: '#/components/responses/InternalServerError'
     put:
@@ -1046,10 +1113,17 @@ paths:
         - stocks
       summary: List stocks
       description: >-
-        Public endpoint; customers are also granted `products.view`. Returns a paginated list of available stocks (products). Breaking change:
+        Public endpoint; customers are also granted `products.view`. Anonymous callers must provide a valid `X-Guest-Token` from `POST /api/v1/guests`; without one the API responds with 428. Requests are rate limited by customer access token or guest token. Returns a paginated list of available stocks (products). Breaking change:
         the response is now an object containing data and meta instead of an array.
       x-required-permission: public
       parameters:
+        - name: X-Guest-Token
+          in: header
+          required: false
+          description: Required for anonymous requests; obtain a token from `POST /api/v1/guests`.
+          schema:
+            type: string
+            format: uuid
         - name: page
           in: query
           description: Page number (defaults to 1)
@@ -1084,6 +1158,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainRuleException'
+        '428':
+          description: Guest session is missing, invalid, or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionRequiredException'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         default:
           $ref: '#/components/responses/InternalServerError'
 
@@ -1139,9 +1221,16 @@ paths:
       tags:
         - stocks
       summary: Get stock
-      description: Public endpoint; customers are also granted `products.view`. Retrieve details for a single stock item by itemId.
+      description: Public endpoint; customers are also granted `products.view`. Anonymous callers must provide a valid `X-Guest-Token` from `POST /api/v1/guests`; without one the API responds with 428. Retrieve details for a single stock item by itemId.
       x-required-permission: public
       parameters:
+        - name: X-Guest-Token
+          in: header
+          required: false
+          description: Required for anonymous requests; obtain a token from `POST /api/v1/guests`.
+          schema:
+            type: string
+            format: uuid
         - name: itemId
           in: path
           required: true
@@ -1160,6 +1249,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundException'
+        '428':
+          description: Guest session is missing, invalid, or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionRequiredException'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         default:
           $ref: '#/components/responses/InternalServerError'
     put:
@@ -1228,7 +1325,7 @@ paths:
       summary: List order summaries
       description: >-
         Returns a paginated list of order summaries for the authenticated user.
-        Requires `orders.view`. Breaking change: the response is now an object containing data and meta instead of an array.
+        Requires `orders.view`. Customer requests are rate limited by access token. Breaking change: the response is now an object containing data and meta instead of an array.
       x-required-permission: orders.view
       security:
         - bearerAuth: []
@@ -1275,13 +1372,15 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainRuleException'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         default:
           $ref: '#/components/responses/InternalServerError'
     post:
       tags:
         - orders
       summary: Create order
-      description: Create a new order for the authenticated user. Requires `orders.create`.
+      description: Create a new order for the authenticated user. Requires `orders.create`. Customer write requests are rate limited by access token.
       x-required-permission: orders.create
       security:
         - bearerAuth: []
@@ -1316,6 +1415,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainRuleException'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         default:
           $ref: '#/components/responses/InternalServerError'
   /api/orders/{orderId}:
@@ -1323,7 +1424,7 @@ paths:
       tags:
         - orders
       summary: Get order
-      description: Retrieve a single order by id for the authenticated user. Requires `orders.view`.
+      description: Retrieve a single order by id for the authenticated user. Requires `orders.view`. Customer read requests are rate limited by access token.
       x-required-permission: orders.view
       security:
         - bearerAuth: []
@@ -1352,6 +1453,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundException'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         default:
           $ref: '#/components/responses/InternalServerError'
   /api/orders/{orderId}/status-history:
@@ -1359,7 +1462,7 @@ paths:
       tags:
         - orders
       summary: Get order status history
-      description: Retrieve the status history of an order owned by the authenticated user, oldest first. Requires `orders.view`.
+      description: Retrieve the status history of an order owned by the authenticated user, oldest first. Requires `orders.view`. Customer read requests are rate limited by access token.
       x-required-permission: orders.view
       security:
         - bearerAuth: []
@@ -1390,5 +1493,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundException'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
         default:
           $ref: '#/components/responses/InternalServerError'

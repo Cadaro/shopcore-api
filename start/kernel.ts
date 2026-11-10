@@ -45,4 +45,5 @@ router.use([
 export const middleware = router.named({
   permission: () => import('#middleware/permission_middleware'),
   user: () => import('#middleware/user_middleware'),
+  businessRateLimit: () => import('#middleware/business_rate_limit_middleware'),
 });
