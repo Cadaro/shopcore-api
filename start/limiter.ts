@@ -97,6 +97,12 @@ export const loginThrottle = rateLimiterWithFailurePolicy(
   })
 );
 
+export const accountLoginWindowSeconds = env.get('AUTH_LOGIN_ACCOUNT_WINDOW_SECONDS', 900);
+export const accountLoginLimiter = limiter.use('redis', {
+  requests: env.get('AUTH_LOGIN_ACCOUNT_LIMIT', 5),
+  duration: accountLoginWindowSeconds,
+});
+
 // Limit registrations per IP address.
 export const registrationThrottle = rateLimiterWithFailurePolicy(
   'auth-registration',
