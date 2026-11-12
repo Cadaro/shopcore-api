@@ -96,8 +96,15 @@
       "tests/**",
       "build/**",
       "node_modules/**",
-      "coverage/**"
+      "coverage/**",
+      "examples/order_status_validator_example.ts",
+      "server.ts"
     ],
-    "all": true
+    "all": true,
+    "check-coverage": true,
+    "lines": 80,
+    "functions": 80,
+    "branches": 80,
+    "statements": 80
   }
 }
