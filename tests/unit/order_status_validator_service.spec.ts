@@ -78,7 +78,15 @@ test.group('Order status validator service', () => {
     );
     assert.isFalse(
       OrderStatusValidatorService.isValidCompletePath(
-        [OrderStatus.WAITING_FOR_PAYMENT, OrderStatus.NEW, OrderStatus.PROCESSING],
+        [
+          OrderStatus.WAITING_FOR_PAYMENT,
+          OrderStatus.NEW,
+          OrderStatus.PROCESSING,
+          OrderStatus.COMPLETED,
+          OrderStatus.SENT,
+          OrderStatus.ON_THE_WAY,
+          OrderStatus.DELIVERED,
+        ],
         DeliveryMethod.PICKUP_POINT
       )
     );
