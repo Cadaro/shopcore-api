@@ -190,7 +190,7 @@ test.group('Items create', (group) => {
     assert.isTrue(true);
   });
 
-  test('stores sku and rejects a duplicate sku', async ({ assert, client }) => {
+  test('ignores a supplied sku and generates a fixed-length sku', async ({ assert, client }) => {
     const admin = await new CreateUser(generateRoleAdmin()).create();
     const token = await createTokenForUser(admin);
     const sku = `SKU-${randomUUID()}`;
@@ -202,12 +202,24 @@ test.group('Items create', (group) => {
     const show = await client
       .get(`/api/stocks/${first.body().itemId}`)
       .header('X-Guest-Token', guestToken);
-    assert.equal(show.body().sku, sku);
+    assert.notEqual(show.body().sku, sku);
+    assert.match(show.body().sku, /^[A-Z0-9]{10}$/);
     const second = await client
       .post('/api/stocks')
       .json({ ...newItemWithoutItemId, sku })
       .bearerToken(token.token);
-    second.assertStatus(409);
+    second.assertStatus(201);
+  });
+
+  test('requires color when creating stock', async ({ client }) => {
+    const admin = await new CreateUser(generateRoleAdmin()).create();
+    const token = await createTokenForUser(admin);
+    const { color: _color, ...stockWithoutColor } = newItemWithoutItemId;
+    const response = await client
+      .post('/api/stocks')
+      .json(stockWithoutColor)
+      .bearerToken(token.token);
+    response.assertStatus(422);
   });
 
   test('replaces stock details and prices on update', async ({ assert, client }) => {
@@ -219,6 +231,8 @@ test.group('Items create', (group) => {
       .json({ ...newItemWithoutItemId, itemId, sku: `SKU-${randomUUID()}` })
       .bearerToken(token.token);
     initial.assertStatus(201);
+    const originalSku = (await db.from('stocks').where('item_id', itemId).first()).sku;
+    assert.match(originalSku, /^[A-Z0-9]{10}$/);
 
     const replacement = {
       ...newItemWithoutItemId,
@@ -233,7 +247,7 @@ test.group('Items create', (group) => {
       .json(replacement)
       .bearerToken(token.token);
     updated.assertStatus(200);
-    assert.equal(updated.body().sku, replacement.sku);
+    assert.equal(updated.body().sku, originalSku);
     assert.deepEqual(updated.body().prices, replacement.prices);
     const storedStock = await db.from('stocks').where('item_id', itemId).first();
     const storedPhotos = await db.from('stock_photos').where('stock_id', storedStock.id);

@@ -24,29 +24,27 @@ export type StockItemSummaryDto = {
   updatedAt: DateTime;
 };
 
-export type StockItemDataDto = {
+type StockItemFields = {
+  prices: Array<StockPriceDto>;
+  name: string;
+  itemDescription: string;
+  size?: string;
+  availableQty: number;
+  photos: Array<StockPhoto>;
+};
+
+export type StockItemDataDto = StockItemFields & {
   itemId: string;
   sku: string | null;
-  prices: Array<StockPriceDto>;
-  name: string;
-  itemDescription: string;
-  size?: string;
-  availableQty: number;
-  photos: Array<StockPhoto>;
 };
 
-export type StockItemCreateDto = {
+export type StockItemCreateDto = StockItemFields & {
   itemId?: string;
   sku?: string;
-  prices: Array<StockPriceDto>;
-  name: string;
-  itemDescription: string;
-  size?: string;
-  availableQty: number;
-  photos: Array<StockPhoto>;
+  color: string;
 };
 
-export type StockItemUpdateDto = Omit<StockItemCreateDto, 'itemId'>;
+export type StockItemUpdateDto = StockItemFields;
 
 export type StockItemCreatedDto = {
   itemId: string;

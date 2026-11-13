@@ -22,6 +22,7 @@ import { PaginationQuery } from '#types/pagination';
 import PaginationDataMapper from '#mappers/pagination_data_mapper';
 import paginationConfig from '#config/pagination';
 import { stockSortColumns } from '#common/pagination';
+import { generateUniqueSKU } from '#common/sku_generator';
 
 export default class StockService {
   private stockDataMapper = new StockDataMapper();
@@ -82,17 +83,15 @@ export default class StockService {
   }
 
   async createSingleItemStock(stock: StockItemCreateDto): Promise<StockItemCreatedDto> {
-    stock.itemId = stock.itemId ?? randomUUID();
-    const exists = await Stock.findBy({ itemId: stock.itemId });
+    const itemId = stock.itemId ?? randomUUID();
+    stock.itemId = itemId;
+    const exists = await Stock.findBy({ itemId });
     if (exists) {
-      throw new ConflictException(`Stock item = ${stock.itemId} already exists`);
+      throw new ConflictException(`Stock item = ${itemId} already exists`);
     }
-    if (stock.sku) {
-      const skuExists = await Stock.findBy({ sku: stock.sku });
-      if (skuExists) {
-        throw new ConflictException(`Stock sku = ${stock.sku} already exists`);
-      }
-    }
+    stock.sku = await generateUniqueSKU(itemId, stock.name, stock.color, stock.size, async (sku) =>
+      Boolean(await Stock.findBy({ sku }))
+    );
     const createdStockItemId = await db.transaction(async (trx) => {
       const stockModel = this.stockDataMapper.mapStockItemCreateDtoToStockModel(stock);
       const { photos, prices, ...stockHead } = stockModel;
@@ -101,7 +100,7 @@ export default class StockService {
       const savedStockPrices = await savedStockHead.related('prices').createMany(prices);
 
       if (!savedStockHead || !savedStockPhotos || !savedStockPrices) {
-        throw new InternalServerException(`Could not create new stock item = ${stock.itemId}`);
+        throw new InternalServerException(`Could not create new stock item = ${itemId}`);
       }
 
       return savedStockHead.itemId;
@@ -119,14 +118,11 @@ export default class StockService {
         throw new NotFoundException(`Stock item ${itemId} not found`);
       }
 
-      if (stock.sku) {
-        const skuExists = await Stock.findBy({ sku: stock.sku }, { client: trx });
-        if (skuExists && skuExists.id !== stockModel.id) {
-          throw new ConflictException(`Stock sku = ${stock.sku} already exists`);
-        }
-      }
-
-      const updatedStock = this.stockDataMapper.mapStockItemUpdateDtoToStockModel(itemId, stock);
+      const updatedStock = this.stockDataMapper.mapStockItemUpdateDtoToStockModel(
+        itemId,
+        stock,
+        stockModel.sku
+      );
       const { photos, prices, ...stockAttributes } = updatedStock;
       await stockModel.merge(stockAttributes).save();
       await stockModel.related('photos').query().delete();

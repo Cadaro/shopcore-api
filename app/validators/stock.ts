@@ -2,7 +2,6 @@ import { Currency } from '#types/enum/currency_code';
 import vine from '@vinejs/vine';
 
 const stockFields = {
-  sku: vine.string().trim().minLength(1).maxLength(100).optional(),
   prices: vine
     .array(
       vine.object({
@@ -23,12 +22,14 @@ const stockFields = {
       name: vine.string().optional(),
     })
   ),
+  size: vine.string().optional(),
 };
 
 export const createStockValidator = vine.create(
   vine.object({
     itemId: vine.string().optional(),
     ...stockFields,
+    color: vine.string().trim().minLength(1),
   })
 );
 

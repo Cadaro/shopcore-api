@@ -21,6 +21,10 @@ The API supports `customer`, `staff`, and `admin` roles. Customers can access cu
 
 Anonymous stock requests require a guest session. Create one with `POST /api/v1/guests`, then send its `guest_token` as the `X-Guest-Token` header on anonymous stock requests. Guest tokens are stored in Redis and expire after 24 hours by default. The guest-session endpoint is limited by client IP; business endpoint limits use customer access tokens or guest tokens, with separate read and write buckets. Defaults are 600 customer reads and 120 customer writes per five minutes, and 300 guest reads and 80 guest writes per five minutes. These values, the guest-session TTL, and guest creation IP limit can be configured through environment variables. Throttled responses do not disclose retry timing in a `Retry-After` header; requests are accepted again after the applicable rate-limit window expires.
 
+# Stock SKU generation
+
+When creating stock, the API generates a 10-character uppercase alphanumeric SKU from the product name, required `color`, optional `size`, and a random suffix. The format is three characters for the name, two for color, two for size, and three random characters. `NO-SIZE` uses `NS`; an omitted or empty size uses `XX`. Any supplied `sku` is ignored, and updates preserve the existing SKU.
+
 # Upcoming Features
 
 - 🚚 Multiple courier gateway integrations
