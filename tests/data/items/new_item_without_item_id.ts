@@ -4,6 +4,7 @@ import { StockItemCreateDto } from '#types/stock';
 export const newItemWithoutItemId: StockItemCreateDto = {
   itemDescription: 'It is a nice test item, very soft. Pls buy me.',
   name: 'Test item',
+  color: 'BLACK',
   prices: [
     { currency: Currency.EUR, price: 9.99, vatAmount: 2.09, vatRate: 0.21 },
     { currency: Currency.PLN, price: 42.99, vatAmount: 9.02, vatRate: 0.23 },

@@ -44,9 +44,20 @@ export default class StockDataMapper {
       photos: stockDto.photos,
     };
   }
-  mapStockItemUpdateDtoToStockModel(itemId: string, stockDto: StockItemUpdateDto): StockItemDb {
+  mapStockItemUpdateDtoToStockModel(
+    itemId: string,
+    stockDto: StockItemUpdateDto,
+    sku: string | null
+  ): StockItemDb {
     return {
-      ...this.mapStockItemCreateDtoToStockModel({ ...stockDto, itemId }),
+      itemId,
+      sku,
+      prices: stockDto.prices,
+      name: stockDto.name,
+      itemDescription: stockDto.itemDescription,
+      size: stockDto.size,
+      availableQty: stockDto.availableQty,
+      photos: stockDto.photos,
     };
   }
   mapStockModelToSingleStockItemDto(stockModel: Stock): StockItemDataDto {
