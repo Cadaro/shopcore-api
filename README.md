@@ -23,7 +23,7 @@ Anonymous stock requests require a guest session. Create one with `POST /api/v1/
 
 # Stock SKU generation
 
-When creating stock, the API generates a 10-character uppercase alphanumeric SKU from the product name, required `color`, optional `size`, and a random suffix. The format is three characters for the name, two for color, two for size, and three random characters. `NO-SIZE` uses `NS`; an omitted or empty size uses `XX`. Any supplied `sku` is ignored, and updates preserve the existing SKU.
+When creating stock, the API generates a 10-character uppercase alphanumeric SKU from the product name, required `color`, optional `size`, and a random suffix. The format is three characters for the name, two for color, two for size, and three random characters. `NO-SIZE` uses `NS`; an omitted or empty size uses `XX`. SKUs are not globally unique; `itemId` remains unique. Any supplied `sku` is ignored, and updates preserve the existing SKU. During legacy data migration, missing colors use the `NOCOLOR` mapping (`NC`).
 
 # Upcoming Features
 

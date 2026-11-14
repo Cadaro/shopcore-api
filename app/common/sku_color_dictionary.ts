@@ -5,6 +5,7 @@ export const COLOR_DICTIONARY: Record<string, string> = {
   GRAY: 'GY',
   GREY: 'GY',
   GREEN: 'GN',
+  NOCOLOR: 'NC',
   ORANGE: 'OR',
   PINK: 'PK',
   PURPLE: 'PU',

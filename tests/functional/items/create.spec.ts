@@ -292,6 +292,7 @@ test.group('Items create', (group) => {
       itemId,
       itemDescription: 'Unique price test',
       name: 'Unique price test',
+      sku: `PRCNCMX${itemId.replaceAll('-', '').slice(0, 3).toUpperCase()}`,
       availableQty: 1,
     });
     await StockPrice.create({

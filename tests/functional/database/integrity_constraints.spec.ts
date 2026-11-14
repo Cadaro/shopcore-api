@@ -65,6 +65,7 @@ test.group('Database integrity constraints', () => {
       itemId,
       itemDescription: 'Integrity constraint test item',
       name: 'Integrity constraint test item',
+      sku: `INTNCMX${itemId.replaceAll('-', '').slice(0, 3).toUpperCase()}`,
       size: 'M',
       availableQty: 1,
     });
@@ -84,11 +85,13 @@ test.group('Database integrity constraints', () => {
   });
 
   test('rejects negative stock quantities', async ({ assert }) => {
+    const itemId = randomUUID();
     await assert.rejects(() =>
       Stock.create({
-        itemId: randomUUID(),
+        itemId,
         itemDescription: 'Invalid integrity constraint test item',
         name: 'Invalid integrity constraint test item',
+        sku: `INTNCMX${itemId.replaceAll('-', '').slice(0, 3).toUpperCase()}`,
         size: 'M',
         availableQty: -1,
       })
@@ -96,10 +99,12 @@ test.group('Database integrity constraints', () => {
   });
 
   test('deletes stock photos when their stock is deleted', async ({ assert }) => {
+    const itemId = randomUUID();
     const stock = await Stock.create({
-      itemId: randomUUID(),
+      itemId,
       itemDescription: 'Stock photo cascade test',
       name: 'Stock photo cascade test',
+      sku: `PHONCMX${itemId.replaceAll('-', '').slice(0, 3).toUpperCase()}`,
       size: 'M',
       availableQty: 1,
     });

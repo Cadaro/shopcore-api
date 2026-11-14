@@ -22,7 +22,7 @@ import { PaginationQuery } from '#types/pagination';
 import PaginationDataMapper from '#mappers/pagination_data_mapper';
 import paginationConfig from '#config/pagination';
 import { stockSortColumns } from '#common/pagination';
-import { generateUniqueSKU } from '#common/sku_generator';
+import { generateFixedSKU } from '#common/sku_generator';
 
 export default class StockService {
   private stockDataMapper = new StockDataMapper();
@@ -89,11 +89,9 @@ export default class StockService {
     if (exists) {
       throw new ConflictException(`Stock item = ${itemId} already exists`);
     }
-    stock.sku = await generateUniqueSKU(itemId, stock.name, stock.color, stock.size, async (sku) =>
-      Boolean(await Stock.findBy({ sku }))
-    );
+    const sku = generateFixedSKU(stock.name, stock.color, stock.size);
     const createdStockItemId = await db.transaction(async (trx) => {
-      const stockModel = this.stockDataMapper.mapStockItemCreateDtoToStockModel(stock);
+      const stockModel = this.stockDataMapper.mapStockItemCreateDtoToStockModel(stock, sku);
       const { photos, prices, ...stockHead } = stockModel;
       const savedStockHead = await Stock.create(stockHead, { client: trx });
       const savedStockPhotos = await savedStockHead.related('photos').createMany(photos);

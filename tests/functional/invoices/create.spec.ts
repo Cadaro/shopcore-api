@@ -93,6 +93,7 @@ test.group('Invoices create', (group) => {
       itemId: invoiceTestItemId,
       itemDescription: 'Invoice test item',
       name: 'Invoice test item',
+      sku: `INVNCMX${invoiceTestItemId.replaceAll('-', '').slice(0, 3).toUpperCase()}`,
       availableQty: 10,
     });
     const firstOrder = await orderService.createOrder(firstOrderReq, user.uuid);
