@@ -8,7 +8,6 @@ test.group('Stock mappers', () => {
     const mapper = new StockDataMapper();
     const createDto = {
       itemId: 'item-1',
-      sku: 'SKU-1',
       name: 'Book',
       itemDescription: 'A book',
       size: 'M',
@@ -17,7 +16,7 @@ test.group('Stock mappers', () => {
       photos: [{ url: '/book.jpg', name: 'front' }],
       prices: [{ currency: Currency.GBP, price: 12.5, vatAmount: 2.5, vatRate: 0.2 }],
     };
-    assert.deepEqual(mapper.mapStockItemCreateDtoToStockModel(createDto), {
+    assert.deepEqual(mapper.mapStockItemCreateDtoToStockModel(createDto, 'SKU-1'), {
       itemId: 'item-1',
       sku: 'SKU-1',
       name: 'Book',
@@ -43,6 +42,7 @@ test.group('Stock mappers', () => {
 
     const stock = Object.assign(new Stock(), {
       ...createDto,
+      sku: 'SKU-1',
       createdAt: undefined,
       updatedAt: undefined,
     });

@@ -19,7 +19,7 @@ export default class Stock extends BaseModel {
   declare itemDescription: string;
 
   @column()
-  declare sku: string | null;
+  declare sku: string;
 
   @column()
   declare name: string;

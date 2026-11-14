@@ -70,7 +70,7 @@ test.group('Items show', (group) => {
     const stocks: Array<StockItemSummaryDto> = (
       await client.get('/api/stocks').header('X-Guest-Token', guestToken)
     ).body().data;
-    const multi = stocks.find((stock) => stock.sku === 'TEST-ITEM');
+    const multi = stocks.find((stock) => stock.sku === 'TESTITEM01');
     assert.isDefined(multi);
     assert.deepEqual(multi!.prices, [
       { currency: 'EUR', price: 9.99, vatAmount: 2.53, vatRate: 0.19 },

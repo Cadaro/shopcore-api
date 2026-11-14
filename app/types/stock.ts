@@ -15,7 +15,7 @@ type StockPhoto = {
 
 export type StockItemSummaryDto = {
   itemId: string;
-  sku: string | null;
+  sku: string;
   name: string;
   prices: Array<StockPriceDto>;
   availableQty: number;
@@ -35,12 +35,11 @@ type StockItemFields = {
 
 export type StockItemDataDto = StockItemFields & {
   itemId: string;
-  sku: string | null;
+  sku: string;
 };
 
 export type StockItemCreateDto = StockItemFields & {
   itemId?: string;
-  sku?: string;
   color: string;
 };
 
@@ -52,7 +51,7 @@ export type StockItemCreatedDto = {
 
 export type StockItemDb = {
   itemId: string;
-  sku: string | null;
+  sku: string;
   prices: Array<StockPriceDto>;
   name: string;
   itemDescription: string;

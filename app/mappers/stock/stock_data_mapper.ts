@@ -32,10 +32,10 @@ export default class StockDataMapper {
       };
     });
   }
-  mapStockItemCreateDtoToStockModel(stockDto: StockItemCreateDto): StockItemDb {
+  mapStockItemCreateDtoToStockModel(stockDto: StockItemCreateDto, sku: string): StockItemDb {
     return {
       itemId: stockDto.itemId!,
-      sku: stockDto.sku ?? null,
+      sku,
       prices: stockDto.prices,
       name: stockDto.name,
       itemDescription: stockDto.itemDescription,
@@ -47,7 +47,7 @@ export default class StockDataMapper {
   mapStockItemUpdateDtoToStockModel(
     itemId: string,
     stockDto: StockItemUpdateDto,
-    sku: string | null
+    sku: string
   ): StockItemDb {
     return {
       itemId,

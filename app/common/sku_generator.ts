@@ -1,9 +1,7 @@
-import { ConflictException } from '#exceptions/domain_exception';
 import { COLOR_DICTIONARY } from '#common/sku_color_dictionary';
 import { randomInt } from 'node:crypto';
 
 const RANDOM_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const MAX_ATTEMPTS = 5;
 
 function normalizeSegment(value: string) {
   return value
@@ -38,22 +36,4 @@ export function generateFixedSKU(name: string, color: string, size?: string): st
   }
 
   return `${productSegment}${colorSegment}${sizeSegment}${suffix}`;
-}
-
-export async function generateUniqueSKU(
-  itemId: string,
-  name: string,
-  color: string,
-  size: string | undefined,
-  isSkuTaken: (sku: string) => Promise<boolean>
-): Promise<string> {
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const sku = generateFixedSKU(name, color, size);
-    if (await isSkuTaken(sku)) {
-      continue;
-    }
-    return sku;
-  }
-
-  throw new ConflictException(`Could not generate a unique SKU for stock item ${itemId}`);
 }

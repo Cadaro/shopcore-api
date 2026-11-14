@@ -8,7 +8,7 @@ export default class extends BaseSeeder {
   async run() {
     const first = await Stock.create({
       itemId: randomUUID(),
-      sku: 'TEST-ITEM',
+      sku: 'TESTITEM01',
       itemDescription: 'It is a nice test item, very soft. Pls buy me.',
       name: 'Test item',
       availableQty: 99,
@@ -21,7 +21,7 @@ export default class extends BaseSeeder {
 
     const second = await Stock.create({
       itemId: 'test-stock-item',
-      sku: 'BLUE-TSHIRT-M',
+      sku: 'BLUTSMX001',
       itemDescription: 'Blue t-shirt in M size. Unisex.',
       name: 'blue t-shirt',
       size: 'M',
@@ -36,7 +36,7 @@ export default class extends BaseSeeder {
 
     const third = await Stock.create({
       itemId: 'test-stock-item-chf',
-      sku: 'BLUE-TSHIRT-M-CHF',
+      sku: 'BLUTSMX002',
       itemDescription: 'Blue t-shirt in M size. Unisex.',
       name: 'blue t-shirt',
       size: 'M',
