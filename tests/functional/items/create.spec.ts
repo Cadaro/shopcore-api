@@ -68,7 +68,7 @@ test.group('Items create', (group) => {
     response.assertStatus(403);
   });
 
-  test('should allow staff to create and update stock', async ({ client }) => {
+  test('should allow staff to create and update stock', async ({ assert, client }) => {
     const staff = await new CreateUser(generateRoleStaff()).create();
     const token = await createTokenForUser(staff);
     const created = await client
@@ -82,6 +82,7 @@ test.group('Items create', (group) => {
       .json(newItemWithoutItemId)
       .bearerToken(token.token);
     updated.assertStatus(200);
+    assert.isUndefined(updated.body().color);
   });
 
   test('rejects fractional minor-unit VAT amounts', async ({ client }) => {

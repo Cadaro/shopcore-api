@@ -5,6 +5,7 @@ import {
   StockItemDataDto,
   StockItemSummaryDto,
   StockItemUpdateDto,
+  StockItemUpdateResponseDto,
 } from '#types/stock';
 import db from '@adonisjs/lucid/services/db';
 import {
@@ -22,8 +23,13 @@ export default class StockService {
   private stockDataMapper = new StockDataMapper();
   private paginationDataMapper = new PaginationDataMapper();
 
+  private eligibleStockQuery(client?: TransactionClientContract) {
+    const query = client ? Stock.query({ client }) : Stock.query();
+    return query.where('is_visible', true).whereNull('deleted_at').where('available_qty', '>', 0);
+  }
+
   async fetchSingleStockItem(itemId: string) {
-    const singleStock = await Stock.findBy({ itemId });
+    const singleStock = await this.eligibleStockQuery().where('item_id', itemId).first();
     if (!singleStock) {
       throw new NotFoundException(`Stock item ${itemId} not found`);
     }
@@ -45,8 +51,7 @@ export default class StockService {
       ]);
     }
 
-    const paginator = await Stock.query()
-      .where('available_qty', '>', 0)
+    const paginator = await this.eligibleStockQuery()
       .orderBy(sortColumn, sortDirection)
       .orderBy('id', 'asc')
       .preload('photos')
@@ -66,7 +71,7 @@ export default class StockService {
   async updateStock(items: Array<ItemWithQty>, trx: TransactionClientContract) {
     for (const item of items) {
       // Lucid wraps the affected-row count of write queries in an array
-      const [updatedRows] = await Stock.query({ client: trx })
+      const [updatedRows] = await this.eligibleStockQuery(trx)
         .where('item_id', item.itemId)
         .where('available_qty', '>=', item.qty)
         .decrement('available_qty', item.qty);
@@ -79,7 +84,7 @@ export default class StockService {
   async updateSingleItemStock(
     itemId: string,
     stock: StockItemUpdateDto
-  ): Promise<StockItemDataDto> {
+  ): Promise<StockItemUpdateResponseDto> {
     return db.transaction(async (trx) => {
       const stockModel = await Stock.findBy({ itemId }, { client: trx });
       if (!stockModel) {
@@ -100,7 +105,7 @@ export default class StockService {
       await stockModel.load('photos');
       await stockModel.load('prices', (query) => query.orderBy('id'));
 
-      return this.stockDataMapper.mapStockModelToSingleStockItemDto(stockModel);
+      return this.stockDataMapper.mapStockModelToStockItemUpdateResponseDto(stockModel);
     });
   }
 }

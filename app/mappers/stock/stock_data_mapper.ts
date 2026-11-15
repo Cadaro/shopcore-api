@@ -7,6 +7,7 @@ import {
   StockItemSummaryDto,
   StockPriceDto,
   StockItemUpdateDto,
+  StockItemUpdateResponseDto,
 } from '#types/stock';
 
 export default class StockDataMapper {
@@ -25,6 +26,7 @@ export default class StockDataMapper {
         itemId: stock.itemId,
         name: stock.name,
         sku: stock.sku,
+        color: stock.color,
         prices: this.mapPrices(stock),
         availableQty: stock.availableQty,
         thumbnail: stock.photos[0],
@@ -64,6 +66,15 @@ export default class StockDataMapper {
     };
   }
   mapStockModelToSingleStockItemDto(stockModel: Stock): StockItemDataDto {
+    return {
+      ...this.mapStockModelToStockItemBaseDto(stockModel),
+      color: stockModel.color,
+    };
+  }
+  mapStockModelToStockItemUpdateResponseDto(stockModel: Stock): StockItemUpdateResponseDto {
+    return this.mapStockModelToStockItemBaseDto(stockModel);
+  }
+  private mapStockModelToStockItemBaseDto(stockModel: Stock) {
     return {
       itemId: stockModel.itemId,
       sku: stockModel.sku,

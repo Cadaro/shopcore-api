@@ -12,6 +12,7 @@ export default class extends BaseSeeder {
       sku: 'TEAB0-NCAX-NS',
       itemDescription: 'It is a nice test item, very soft. Pls buy me.',
       name: 'Test item',
+      isVisible: true,
       availableQty: 99,
     });
     await first.related('prices').createMany([
@@ -26,6 +27,7 @@ export default class extends BaseSeeder {
       itemDescription: 'Blue t-shirt in M size. Unisex.',
       name: 'blue t-shirt',
       size: 'M',
+      isVisible: true,
       availableQty: 72,
     });
     await second
@@ -41,6 +43,7 @@ export default class extends BaseSeeder {
       itemDescription: 'Blue t-shirt in M size. Unisex.',
       name: 'blue t-shirt',
       size: 'M',
+      isVisible: true,
       availableQty: 72,
     });
     await third
