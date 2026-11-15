@@ -23,7 +23,7 @@ test.group('Orders create for stock update', () => {
       itemId,
       itemDescription: 'Test item',
       name: 'Test item',
-      sku: `TSTNCMX${itemId.replaceAll('-', '').slice(0, 3).toUpperCase()}`,
+      sku: `TS${itemId.slice(0, 3).toUpperCase()}-NC${itemId.slice(3, 5).toUpperCase()}-M`,
       size: 'M',
       availableQty,
     });

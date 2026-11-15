@@ -8,7 +8,10 @@ import { generateRoleAdmin } from '#tests/data/users/role_admin';
 import { generateRoleStaff } from '#tests/data/users/role_staff';
 import { CreateUser } from '#tests/data/users/user';
 import { StockItemCreatedDto } from '#types/stock';
+import crypto from 'node:crypto';
 import { randomUUID } from 'node:crypto';
+import { syncBuiltinESMExports } from 'node:module';
+import { mock } from 'node:test';
 import Stock from '#models/stock';
 import StockPrice from '#models/stock_price';
 import StockService from '#services/stock_service';
@@ -190,7 +193,7 @@ test.group('Items create', (group) => {
     assert.isTrue(true);
   });
 
-  test('ignores a supplied sku and generates a fixed-length sku', async ({ assert, client }) => {
+  test('ignores a supplied sku and generates a unique sku', async ({ assert, client }) => {
     const admin = await new CreateUser(generateRoleAdmin()).create();
     const token = await createTokenForUser(admin);
     const sku = `SKU-${randomUUID()}`;
@@ -203,12 +206,57 @@ test.group('Items create', (group) => {
       .get(`/api/stocks/${first.body().itemId}`)
       .header('X-Guest-Token', guestToken);
     assert.notEqual(show.body().sku, sku);
-    assert.match(show.body().sku, /^[A-Z0-9]{10}$/);
+    assert.match(show.body().sku, /^[A-Z0-9]{5}-[A-Z0-9]{4}-[A-Z0-9]{1,6}$/);
     const second = await client
       .post('/api/stocks')
       .json({ ...newItemWithoutItemId, sku })
       .bearerToken(token.token);
     second.assertStatus(201);
+    const secondStock = await db.from('stocks').where('item_id', second.body().itemId).first();
+    assert.notEqual(secondStock.sku, show.body().sku);
+  });
+
+  test('generates SKUs at the minimum and maximum lengths', async ({ assert, client }) => {
+    const admin = await new CreateUser(generateRoleAdmin()).create();
+    const token = await createTokenForUser(admin);
+
+    for (const [size, length] of [
+      ['S', 12],
+      ['104/110', 17],
+    ] as const) {
+      const response = await client
+        .post('/api/stocks')
+        .json({ ...newItemWithoutItemId, size })
+        .bearerToken(token.token);
+      response.assertStatus(201);
+      const stock = await db.from('stocks').where('item_id', response.body().itemId).first();
+      assert.match(stock.sku, /^[A-Z0-9]{5}-[A-Z0-9]{4}-[A-Z0-9]{1,6}$/);
+      assert.lengthOf(stock.sku, length);
+    }
+  });
+
+  test('rejects a generated SKU already used by another item', async ({ assert }) => {
+    const itemId = randomUUID();
+    await Stock.create({
+      itemId: randomUUID(),
+      name: 'Existing stock',
+      itemDescription: 'Existing stock',
+      sku: 'TEAAA-BKAA-M',
+      availableQty: 1,
+    });
+
+    const randomInt = mock.method(crypto, 'randomInt', () => 0);
+    syncBuiltinESMExports();
+    try {
+      await assert.rejects(async () => {
+        await new StockService().createSingleItemStock({ ...newItemWithoutItemId, itemId });
+      }, /Generated SKU already exists/);
+    } finally {
+      randomInt.mock.restore();
+      syncBuiltinESMExports();
+    }
+
+    assert.isNull(await db.from('stocks').where('item_id', itemId).first());
   });
 
   test('requires color when creating stock', async ({ client }) => {
@@ -232,7 +280,7 @@ test.group('Items create', (group) => {
       .bearerToken(token.token);
     initial.assertStatus(201);
     const originalSku = (await db.from('stocks').where('item_id', itemId).first()).sku;
-    assert.match(originalSku, /^[A-Z0-9]{10}$/);
+    assert.match(originalSku, /^[A-Z0-9]{5}-[A-Z0-9]{4}-[A-Z0-9]{1,6}$/);
 
     const replacement = {
       ...newItemWithoutItemId,
@@ -292,7 +340,7 @@ test.group('Items create', (group) => {
       itemId,
       itemDescription: 'Unique price test',
       name: 'Unique price test',
-      sku: `PRCNCMX${itemId.replaceAll('-', '').slice(0, 3).toUpperCase()}`,
+      sku: `PR${itemId.slice(0, 3).toUpperCase()}-NC${itemId.slice(3, 5).toUpperCase()}-M`,
       availableQty: 1,
     });
     await StockPrice.create({
