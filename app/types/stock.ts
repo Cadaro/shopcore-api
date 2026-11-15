@@ -41,6 +41,7 @@ export type StockItemDataDto = StockItemFields & {
 export type StockItemCreateDto = StockItemFields & {
   itemId?: string;
   color: string;
+  isVisible: boolean;
 };
 
 export type StockItemUpdateDto = StockItemFields;
@@ -58,6 +59,11 @@ export type StockItemDb = {
   size?: string;
   availableQty: number;
   photos: Array<StockPhoto>;
+};
+
+export type StockItemCreateDb = StockItemDb & {
+  color: string;
+  isVisible: boolean;
 };
 
 export type ItemWithQty = {

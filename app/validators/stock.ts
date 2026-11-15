@@ -29,7 +29,9 @@ export const createStockValidator = vine.create(
   vine.object({
     itemId: vine.string().optional(),
     ...stockFields,
-    color: vine.string().trim().minLength(1),
+    photos: stockFields.photos.clone().minLength(1),
+    color: vine.string().trim().minLength(1).maxLength(30),
+    isVisible: vine.boolean({ strict: true }),
   })
 );
 

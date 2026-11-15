@@ -14,6 +14,7 @@ import OrderStatusController from '#controllers/order_status_controller';
 import TokenController from '#controllers/token_controller';
 import UsersController from '#controllers/users_controller';
 import StocksController from '#controllers/stocks_controller';
+import AdminStocksController from '#controllers/admin_stocks_controller';
 import InvoiceCustomersController from '#controllers/invoice_customers_controller';
 import GuestsController from '#controllers/guests_controller';
 import { Permission } from '#types/enum/permission';
@@ -27,10 +28,13 @@ router
         .resource('stocks', StocksController)
         .params({ stocks: 'itemId' })
         .apiOnly()
-        .only(['index', 'show', 'store', 'update'])
-        .use(['store', 'update'], middleware.permission({ permission: Permission.PRODUCTS_MANAGE }))
+        .only(['index', 'show', 'update'])
+        .use('update', middleware.permission({ permission: Permission.PRODUCTS_MANAGE }))
         .use('index', middleware.businessRateLimit({ group: 'read', allowGuests: true }))
         .use('show', middleware.businessRateLimit({ group: 'read', allowGuests: true }));
+      router
+        .post('admin/stocks', [AdminStocksController, 'store'])
+        .use(middleware.permission({ permission: Permission.PRODUCTS_MANAGE }));
       router
         .resource('orders', OrdersController)
         .params({ orders: 'orderId' })

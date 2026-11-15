@@ -1,11 +1,6 @@
 import StockService from '#services/stock_service';
-import {
-  StockItemCreatedDto,
-  StockItemCreateDto,
-  StockItemDataDto,
-  StockItemUpdateDto,
-} from '#types/stock';
-import { createStockValidator, updateStockValidator } from '#validators/stock';
+import { StockItemDataDto, StockItemUpdateDto } from '#types/stock';
+import { updateStockValidator } from '#validators/stock';
 import { inject } from '@adonisjs/core';
 import type { HttpContext } from '@adonisjs/core/http';
 import { createPaginationValidator } from '#validators/pagination';
@@ -29,14 +24,6 @@ export default class StocksController {
       params.itemId
     );
     return response.ok(singleStockItem);
-  }
-
-  async store({ request, response }: HttpContext) {
-    // Permission middleware ensures only staff and admins can reach this point
-    const singleStockItem: StockItemCreateDto = await request.validateUsing(createStockValidator);
-    const createdSingleStockItemId: StockItemCreatedDto =
-      await this.stockService.createSingleItemStock(singleStockItem);
-    return response.created(createdSingleStockItemId);
   }
 
   async update({ params, request, response }: HttpContext) {

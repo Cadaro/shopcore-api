@@ -37,7 +37,7 @@ test.group('Roles and permissions', (group) => {
     assigned.assertStatus(204);
 
     const stock = await client
-      .post('/api/stocks')
+      .post('/api/admin/stocks')
       .json(newItemWithoutItemId)
       .bearerToken(customerToken.token);
     stock.assertStatus(201);
