@@ -14,7 +14,7 @@ import { syncBuiltinESMExports } from 'node:module';
 import { mock } from 'node:test';
 import Stock from '#models/stock';
 import StockPrice from '#models/stock_price';
-import StockService from '#services/stock_service';
+import AdminStockService from '#services/admin_stock_service';
 import { Currency } from '#types/enum/currency_code';
 import db from '@adonisjs/lucid/services/db';
 import redis from '@adonisjs/redis/services/main';
@@ -39,8 +39,21 @@ test.group('Items create', (group) => {
   }
 
   test('should fail to create a new item by unauthenticated user', async ({ client }) => {
-    const response = await client.post('/api/stocks').json(newItemWithoutItemId);
+    const response = await client
+      .post('/api/admin/stocks')
+      .header('X-Guest-Token', guestToken)
+      .json(newItemWithoutItemId);
     response.assertStatus(401);
+  });
+
+  test('the old stock creation route is disabled', async ({ client }) => {
+    const admin = await new CreateUser(generateRoleAdmin()).create();
+    const token = await createTokenForUser(admin);
+    const response = await client
+      .post('/api/stocks')
+      .json(newItemWithoutItemId)
+      .bearerToken(token.token);
+    response.assertStatus(404);
   });
 
   test('should fail to create a new item by role user', async ({ client }) => {
@@ -49,7 +62,7 @@ test.group('Items create', (group) => {
     const token = await createTokenForUser(user);
 
     const response = await client
-      .post('/api/stocks')
+      .post('/api/admin/stocks')
       .json(newItemWithoutItemId)
       .bearerToken(token.token);
     response.assertStatus(403);
@@ -59,7 +72,7 @@ test.group('Items create', (group) => {
     const staff = await new CreateUser(generateRoleStaff()).create();
     const token = await createTokenForUser(staff);
     const created = await client
-      .post('/api/stocks')
+      .post('/api/admin/stocks')
       .json(newItemWithoutItemId)
       .bearerToken(token.token);
     created.assertStatus(201);
@@ -75,7 +88,7 @@ test.group('Items create', (group) => {
     const admin = await new CreateUser(generateRoleAdmin()).create();
     const token = await createTokenForUser(admin);
     const response = await client
-      .post('/api/stocks')
+      .post('/api/admin/stocks')
       .json({
         ...newItemWithoutItemId,
         prices: [
@@ -96,7 +109,7 @@ test.group('Items create', (group) => {
     const token = await createTokenForUser(admin);
 
     const response = await client
-      .post('/api/stocks')
+      .post('/api/admin/stocks')
       .json(newItemWithoutItemId)
       .bearerToken(token.token);
     response.assertStatus(201);
@@ -157,7 +170,7 @@ test.group('Items create', (group) => {
     const token = await createTokenForUser(admin);
 
     const response = await client
-      .post('/api/stocks')
+      .post('/api/admin/stocks')
       .json(newItemWithItemId)
       .bearerToken(token.token);
     response.assertStatus(201);
@@ -175,7 +188,7 @@ test.group('Items create', (group) => {
     const admin = await new CreateUser(generateRoleAdmin()).create();
     const token = await createTokenForUser(admin);
     const duplicate = await client
-      .post('/api/stocks')
+      .post('/api/admin/stocks')
       .json({
         ...newItemWithoutItemId,
         prices: [
@@ -186,7 +199,7 @@ test.group('Items create', (group) => {
       .bearerToken(token.token);
     duplicate.assertStatus(422);
     const empty = await client
-      .post('/api/stocks')
+      .post('/api/admin/stocks')
       .json({ ...newItemWithoutItemId, prices: [] })
       .bearerToken(token.token);
     empty.assertStatus(422);
@@ -198,7 +211,7 @@ test.group('Items create', (group) => {
     const token = await createTokenForUser(admin);
     const sku = `SKU-${randomUUID()}`;
     const first = await client
-      .post('/api/stocks')
+      .post('/api/admin/stocks')
       .json({ ...newItemWithoutItemId, sku })
       .bearerToken(token.token);
     first.assertStatus(201);
@@ -208,7 +221,7 @@ test.group('Items create', (group) => {
     assert.notEqual(show.body().sku, sku);
     assert.match(show.body().sku, /^[A-Z0-9]{5}-[A-Z0-9]{4}-[A-Z0-9]{1,6}$/);
     const second = await client
-      .post('/api/stocks')
+      .post('/api/admin/stocks')
       .json({ ...newItemWithoutItemId, sku })
       .bearerToken(token.token);
     second.assertStatus(201);
@@ -225,7 +238,7 @@ test.group('Items create', (group) => {
       ['104/110', 17],
     ] as const) {
       const response = await client
-        .post('/api/stocks')
+        .post('/api/admin/stocks')
         .json({ ...newItemWithoutItemId, size })
         .bearerToken(token.token);
       response.assertStatus(201);
@@ -249,8 +262,8 @@ test.group('Items create', (group) => {
     syncBuiltinESMExports();
     try {
       await assert.rejects(async () => {
-        await new StockService().createSingleItemStock({ ...newItemWithoutItemId, itemId });
-      }, /Generated SKU already exists/);
+        await new AdminStockService().createSingleItemStock({ ...newItemWithoutItemId, itemId });
+      }, /SKU TEAAA-BKAA-M already exists/);
     } finally {
       randomInt.mock.restore();
       syncBuiltinESMExports();
@@ -264,10 +277,49 @@ test.group('Items create', (group) => {
     const token = await createTokenForUser(admin);
     const { color: _color, ...stockWithoutColor } = newItemWithoutItemId;
     const response = await client
-      .post('/api/stocks')
+      .post('/api/admin/stocks')
       .json(stockWithoutColor)
       .bearerToken(token.token);
     response.assertStatus(422);
+  });
+
+  test('validates visibility, color and photos on creation', async ({ client }) => {
+    const admin = await new CreateUser(generateRoleAdmin()).create();
+    const token = await createTokenForUser(admin);
+    const { isVisible: _isVisible, ...withoutVisibility } = newItemWithoutItemId;
+    for (const payload of [
+      withoutVisibility,
+      { ...newItemWithoutItemId, isVisible: 'true' },
+      { ...newItemWithoutItemId, isVisible: 1 },
+      { ...newItemWithoutItemId, isVisible: null },
+      { ...newItemWithoutItemId, color: '' },
+      { ...newItemWithoutItemId, color: 'x'.repeat(31) },
+      { ...newItemWithoutItemId, photos: [] },
+    ]) {
+      const response = await client
+        .post('/api/admin/stocks')
+        .json(payload)
+        .bearerToken(token.token);
+      response.assertStatus(422);
+    }
+  });
+
+  test('persists requested visibility and color', async ({ assert, client }) => {
+    const admin = await new CreateUser(generateRoleAdmin()).create();
+    const token = await createTokenForUser(admin);
+    for (const [isVisible, color, expectedColor] of [
+      [true, ' BLUE ', 'BLUE'],
+      [false, 'X'.repeat(30), 'X'.repeat(30)],
+    ] as const) {
+      const response = await client
+        .post('/api/admin/stocks')
+        .json({ ...newItemWithoutItemId, isVisible, color })
+        .bearerToken(token.token);
+      response.assertStatus(201);
+      const stored = await db.from('stocks').where('item_id', response.body().itemId).first();
+      assert.equal(Number(stored.is_visible), Number(isVisible));
+      assert.equal(stored.color, expectedColor);
+    }
   });
 
   test('replaces stock details and prices on update', async ({ assert, client }) => {
@@ -275,7 +327,7 @@ test.group('Items create', (group) => {
     const token = await createTokenForUser(admin);
     const itemId = randomUUID();
     const initial = await client
-      .post('/api/stocks')
+      .post('/api/admin/stocks')
       .json({ ...newItemWithoutItemId, itemId, sku: `SKU-${randomUUID()}` })
       .bearerToken(token.token);
     initial.assertStatus(201);
@@ -298,6 +350,8 @@ test.group('Items create', (group) => {
     assert.equal(updated.body().sku, originalSku);
     assert.deepEqual(updated.body().prices, replacement.prices);
     const storedStock = await db.from('stocks').where('item_id', itemId).first();
+    assert.equal(Number(storedStock.is_visible), 1);
+    assert.equal(storedStock.color, newItemWithoutItemId.color);
     const storedPhotos = await db.from('stock_photos').where('stock_id', storedStock.id);
     assert.deepEqual(
       storedPhotos.map((photo) => [photo.url, photo.name]),
@@ -319,10 +373,25 @@ test.group('Items create', (group) => {
     assert.deepEqual(detail.body().prices, replacement.prices);
   });
 
+  test('preserves existing update behavior for empty photos', async ({ client }) => {
+    const admin = await new CreateUser(generateRoleAdmin()).create();
+    const token = await createTokenForUser(admin);
+    const created = await client
+      .post('/api/admin/stocks')
+      .json(newItemWithoutItemId)
+      .bearerToken(token.token);
+    created.assertStatus(201);
+    const updated = await client
+      .put(`/api/stocks/${created.body().itemId}`)
+      .json({ ...newItemWithoutItemId, photos: [] })
+      .bearerToken(token.token);
+    updated.assertStatus(200);
+  });
+
   test('rolls back the stock when a price insert fails', async ({ assert }) => {
     const itemId = randomUUID();
     await assert.rejects(() =>
-      new StockService().createSingleItemStock({
+      new AdminStockService().createSingleItemStock({
         ...newItemWithoutItemId,
         itemId,
         prices: [

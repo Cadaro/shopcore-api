@@ -25,6 +25,12 @@ export default class Stock extends BaseModel {
   declare name: string;
 
   @column()
+  declare color: string;
+
+  @column()
+  declare isVisible: boolean;
+
+  @column()
   declare size: string;
 
   @column()

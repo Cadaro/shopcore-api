@@ -42,7 +42,7 @@ test.group('Unified error response', (group) => {
   test('returns a standard forbidden error', async ({ client, assert }) => {
     const user = await new CreateUser(generateRoleUser()).create();
     const token = await new TokenService().createToken(user);
-    const response = await client.post('/api/stocks').bearerToken(token.token).json({});
+    const response = await client.post('/api/admin/stocks').bearerToken(token.token).json({});
     const body = response.body();
 
     response.assertStatus(403);

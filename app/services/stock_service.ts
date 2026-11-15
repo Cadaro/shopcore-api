@@ -2,18 +2,13 @@ import StockDataMapper from '#mappers/stock/stock_data_mapper';
 import Stock from '#models/stock';
 import {
   ItemWithQty,
-  StockItemCreatedDto,
-  StockItemCreateDto,
   StockItemDataDto,
   StockItemSummaryDto,
   StockItemUpdateDto,
 } from '#types/stock';
 import db from '@adonisjs/lucid/services/db';
-import { randomUUID } from 'crypto';
 import {
-  ConflictException,
   InsufficientStockError,
-  InternalServerException,
   NotFoundException,
   DomainRuleException,
 } from '#exceptions/domain_exception';
@@ -22,7 +17,6 @@ import { PaginationQuery } from '#types/pagination';
 import PaginationDataMapper from '#mappers/pagination_data_mapper';
 import paginationConfig from '#config/pagination';
 import { stockSortColumns } from '#common/pagination';
-import { generateFixedSKU } from '#common/sku_generator';
 
 export default class StockService {
   private stockDataMapper = new StockDataMapper();
@@ -80,33 +74,6 @@ export default class StockService {
         throw new InsufficientStockError(`Insufficient stock for item ${item.itemId}`);
       }
     }
-  }
-
-  async createSingleItemStock(stock: StockItemCreateDto): Promise<StockItemCreatedDto> {
-    const itemId = stock.itemId ?? randomUUID();
-    stock.itemId = itemId;
-    const exists = await Stock.findBy({ itemId });
-    if (exists) {
-      throw new ConflictException(`Stock item = ${itemId} already exists`);
-    }
-    const sku = generateFixedSKU(stock.name, stock.color, stock.size);
-    if (await Stock.findBy({ sku })) {
-      throw new ConflictException('Generated SKU already exists');
-    }
-    const createdStockItemId = await db.transaction(async (trx) => {
-      const stockModel = this.stockDataMapper.mapStockItemCreateDtoToStockModel(stock, sku);
-      const { photos, prices, ...stockHead } = stockModel;
-      const savedStockHead = await Stock.create(stockHead, { client: trx });
-      const savedStockPhotos = await savedStockHead.related('photos').createMany(photos);
-      const savedStockPrices = await savedStockHead.related('prices').createMany(prices);
-
-      if (!savedStockHead || !savedStockPhotos || !savedStockPrices) {
-        throw new InternalServerException(`Could not create new stock item = ${itemId}`);
-      }
-
-      return savedStockHead.itemId;
-    });
-    return { itemId: createdStockItemId };
   }
 
   async updateSingleItemStock(

@@ -1,6 +1,7 @@
 import Stock from '#models/stock';
 import {
   StockItemCreateDto,
+  StockItemCreateDb,
   StockItemDataDto,
   StockItemDb,
   StockItemSummaryDto,
@@ -32,12 +33,14 @@ export default class StockDataMapper {
       };
     });
   }
-  mapStockItemCreateDtoToStockModel(stockDto: StockItemCreateDto, sku: string): StockItemDb {
+  mapStockItemCreateDtoToStockModel(stockDto: StockItemCreateDto, sku: string): StockItemCreateDb {
     return {
       itemId: stockDto.itemId!,
       sku,
       prices: stockDto.prices,
       name: stockDto.name,
+      color: stockDto.color,
+      isVisible: stockDto.isVisible,
       itemDescription: stockDto.itemDescription,
       size: stockDto.size,
       availableQty: stockDto.availableQty,
