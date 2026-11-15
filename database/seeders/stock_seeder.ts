@@ -2,13 +2,14 @@ import Stock from '#models/stock';
 import { Currency } from '#types/enum/currency_code';
 import { BaseSeeder } from '@adonisjs/lucid/seeders';
 import { randomUUID } from 'crypto';
+import { generateFixedSKU } from '#common/sku_generator';
 
 export default class extends BaseSeeder {
   static environment: string[] = ['test', 'development'];
   async run() {
     const first = await Stock.create({
       itemId: randomUUID(),
-      sku: 'TESTITEM01',
+      sku: 'TEAB0-NCAX-NS',
       itemDescription: 'It is a nice test item, very soft. Pls buy me.',
       name: 'Test item',
       availableQty: 99,
@@ -21,7 +22,7 @@ export default class extends BaseSeeder {
 
     const second = await Stock.create({
       itemId: 'test-stock-item',
-      sku: 'BLUTSMX001',
+      sku: generateFixedSKU('blue t-shirt', 'BLUE', 'M'),
       itemDescription: 'Blue t-shirt in M size. Unisex.',
       name: 'blue t-shirt',
       size: 'M',
@@ -36,7 +37,7 @@ export default class extends BaseSeeder {
 
     const third = await Stock.create({
       itemId: 'test-stock-item-chf',
-      sku: 'BLUTSMX002',
+      sku: generateFixedSKU('blue t-shirt', 'BLUE', 'M'),
       itemDescription: 'Blue t-shirt in M size. Unisex.',
       name: 'blue t-shirt',
       size: 'M',

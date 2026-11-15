@@ -90,6 +90,9 @@ export default class StockService {
       throw new ConflictException(`Stock item = ${itemId} already exists`);
     }
     const sku = generateFixedSKU(stock.name, stock.color, stock.size);
+    if (await Stock.findBy({ sku })) {
+      throw new ConflictException('Generated SKU already exists');
+    }
     const createdStockItemId = await db.transaction(async (trx) => {
       const stockModel = this.stockDataMapper.mapStockItemCreateDtoToStockModel(stock, sku);
       const { photos, prices, ...stockHead } = stockModel;

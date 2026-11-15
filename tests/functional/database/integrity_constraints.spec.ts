@@ -65,7 +65,7 @@ test.group('Database integrity constraints', () => {
       itemId,
       itemDescription: 'Integrity constraint test item',
       name: 'Integrity constraint test item',
-      sku: `INTNCMX${itemId.replaceAll('-', '').slice(0, 3).toUpperCase()}`,
+      sku: `IN${itemId.slice(0, 3).toUpperCase()}-NC${itemId.slice(3, 5).toUpperCase()}-M`,
       size: 'M',
       availableQty: 1,
     });
@@ -91,7 +91,7 @@ test.group('Database integrity constraints', () => {
         itemId,
         itemDescription: 'Invalid integrity constraint test item',
         name: 'Invalid integrity constraint test item',
-        sku: `INTNCMX${itemId.replaceAll('-', '').slice(0, 3).toUpperCase()}`,
+        sku: `IN${itemId.slice(0, 3).toUpperCase()}-NC${itemId.slice(3, 5).toUpperCase()}-M`,
         size: 'M',
         availableQty: -1,
       })
@@ -104,7 +104,7 @@ test.group('Database integrity constraints', () => {
       itemId,
       itemDescription: 'Stock photo cascade test',
       name: 'Stock photo cascade test',
-      sku: `PHONCMX${itemId.replaceAll('-', '').slice(0, 3).toUpperCase()}`,
+      sku: `PH${itemId.slice(0, 3).toUpperCase()}-NC${itemId.slice(3, 5).toUpperCase()}-M`,
       size: 'M',
       availableQty: 1,
     });
