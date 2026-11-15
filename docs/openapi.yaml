@@ -430,6 +430,8 @@ components:
           pattern: '^[A-Z0-9]{5}-[A-Z0-9]{4}-[A-Z0-9]{1,6}$'
         name:
           type: string
+        color:
+          type: string
         prices:
           type: array
           description: One price per currency
@@ -482,6 +484,38 @@ components:
           $ref: '#/components/schemas/PaginationMeta'
 
     StockItemDataDto:
+      type: object
+      properties:
+        itemId:
+          type: string
+        sku:
+          type: string
+          description: Globally unique generated SKU, 12–17 characters in the format `NNRRR-CCRR-SIZE`.
+          minLength: 12
+          maxLength: 17
+          pattern: '^[A-Z0-9]{5}-[A-Z0-9]{4}-[A-Z0-9]{1,6}$'
+        prices:
+          type: array
+          description: One price per currency
+          items:
+            $ref: '#/components/schemas/StockPrice'
+        name:
+          type: string
+        color:
+          type: string
+        itemDescription:
+          type: string
+        size:
+          type: string
+          nullable: true
+        availableQty:
+          type: integer
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockPhoto'
+
+    StockItemUpdateResponseDto:
       type: object
       properties:
         itemId:
@@ -1175,7 +1209,7 @@ paths:
         - stocks
       summary: List stocks
       description: >-
-        Public endpoint; customers are also granted `products.view`. Anonymous callers must provide a valid `X-Guest-Token` from `POST /api/v1/guests`; without one the API responds with 428. Requests are rate limited by customer access token or guest token. Returns a paginated list of available stocks (products). Breaking change:
+        Public endpoint; customers are also granted `products.view`. Anonymous callers must provide a valid `X-Guest-Token` from `POST /api/v1/guests`; without one the API responds with 428. Requests are rate limited by customer access token or guest token. Returns a paginated list of stocks that are visible, not soft-deleted, and have positive available quantity. Breaking change:
         the response is now an object containing data and meta instead of an array.
       x-required-permission: public
       parameters:
@@ -1284,7 +1318,7 @@ paths:
       tags:
         - stocks
       summary: Get stock
-      description: Public endpoint; customers are also granted `products.view`. Anonymous callers must provide a valid `X-Guest-Token` from `POST /api/v1/guests`; without one the API responds with 428. Retrieve details for a single stock item by itemId.
+      description: Public endpoint; customers are also granted `products.view`. Anonymous callers must provide a valid `X-Guest-Token` from `POST /api/v1/guests`; without one the API responds with 428. Retrieve details for a stock item by itemId. Hidden, soft-deleted, or depleted stocks are returned as not found.
       x-required-permission: public
       parameters:
         - name: X-Guest-Token
@@ -1348,7 +1382,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/StockItemDataDto'
+                $ref: '#/components/schemas/StockItemUpdateResponseDto'
         '401':
           description: Unauthorized
           content:
@@ -1437,7 +1471,7 @@ paths:
       tags:
         - orders
       summary: Create order
-      description: Create a new order for the authenticated user. Requires `orders.create`. Customer write requests are rate limited by access token.
+      description: Create a new order for the authenticated user. Requires `orders.create`. Customer write requests are rate limited by access token. Hidden, soft-deleted, or depleted stocks cannot be ordered and result in an insufficient-stock response.
       x-required-permission: orders.create
       security:
         - bearerAuth: []

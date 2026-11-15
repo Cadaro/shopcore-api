@@ -30,6 +30,9 @@ export default class Stock extends BaseModel {
   @column()
   declare isVisible: boolean;
 
+  @column.dateTime()
+  declare deletedAt: DateTime | null;
+
   @column()
   declare size: string;
 

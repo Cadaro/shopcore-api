@@ -3,9 +3,28 @@ import { test } from '@japa/runner';
 import { randomUUID } from 'node:crypto';
 import redis from '@adonisjs/redis/services/main';
 import env from '#start/env';
+import Stock from '#models/stock';
+import { DateTime } from 'luxon';
 
 test.group('Items show', (group) => {
   let guestToken: string;
+
+  const createStock = async (
+    overrides: Partial<Pick<Stock, 'availableQty' | 'isVisible' | 'deletedAt'>> = {}
+  ) => {
+    const itemId = randomUUID();
+    return Stock.create({
+      itemId,
+      itemDescription: 'Stock filter test item',
+      sku: `FS${itemId.slice(0, 3).toUpperCase()}-NC${itemId.slice(3, 5).toUpperCase()}-M`,
+      name: `Stock filter test ${itemId}`,
+      color: 'PURPLE',
+      isVisible: true,
+      size: 'M',
+      availableQty: 1,
+      ...overrides,
+    });
+  };
 
   group.each.setup(async () => {
     guestToken = randomUUID();
@@ -34,6 +53,7 @@ test.group('Items show', (group) => {
       'itemId',
       'sku',
       'name',
+      'color',
       'prices',
       'availableQty',
       'thumbnail',
@@ -42,6 +62,35 @@ test.group('Items show', (group) => {
     ]);
     assert.isString(stocks[0].createdAt);
     assert.isString(stocks[0].updatedAt);
+    assert.isString(stocks[0].color);
+  });
+
+  test('lists only visible, non-deleted stocks with positive available quantity', async ({
+    assert,
+    client,
+  }) => {
+    const eligible = await createStock();
+    const hidden = await createStock({ isVisible: false });
+    const deleted = await createStock({ deletedAt: DateTime.utc() });
+    const depleted = await createStock({ availableQty: 0 });
+    const ineligibleByAllFilters = await createStock({
+      isVisible: false,
+      deletedAt: DateTime.utc(),
+      availableQty: 0,
+    });
+
+    const response = await client
+      .get('/api/stocks?perPage=100')
+      .header('X-Guest-Token', guestToken);
+    response.assertStatus(200);
+    const itemIds = (response.body().data as Array<StockItemSummaryDto>).map(
+      (stock) => stock.itemId
+    );
+    assert.include(itemIds, eligible.itemId);
+    assert.notInclude(itemIds, hidden.itemId);
+    assert.notInclude(itemIds, deleted.itemId);
+    assert.notInclude(itemIds, depleted.itemId);
+    assert.notInclude(itemIds, ineligibleByAllFilters.itemId);
   });
 
   test('get detail of stock item', async ({ assert, client }) => {
@@ -58,12 +107,33 @@ test.group('Items show', (group) => {
       'sku',
       'itemDescription',
       'name',
+      'color',
       'prices',
       'size',
       'availableQty',
       'photos',
     ]);
+    assert.equal(singleStockItem.color, stocks[0].color);
     assert.isAtLeast(singleStockItem.prices.length, 1);
+  });
+
+  test('returns not found for hidden, deleted, or depleted stock details', async ({
+    assert,
+    client,
+  }) => {
+    const ineligibleStocks = [
+      await createStock({ isVisible: false }),
+      await createStock({ deletedAt: DateTime.utc() }),
+      await createStock({ availableQty: 0 }),
+    ];
+
+    for (const stock of ineligibleStocks) {
+      const response = await client
+        .get(`/api/stocks/${stock.itemId}`)
+        .header('X-Guest-Token', guestToken);
+      response.assertStatus(404);
+      assert.equal(response.body().code, 'NOT_FOUND');
+    }
   });
 
   test('returns every currency price of a stock item', async ({ assert, client }) => {

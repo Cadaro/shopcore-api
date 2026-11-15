@@ -53,6 +53,7 @@ test.group('Stock mappers', () => {
       itemId: 'item-1',
       name: 'Book',
       sku: 'SKU-1',
+      color: 'BLACK',
       prices: createDto.prices,
       availableQty: 4,
       thumbnail: createDto.photos[0],
@@ -60,6 +61,17 @@ test.group('Stock mappers', () => {
       updatedAt: undefined,
     });
     assert.deepEqual(mapper.mapStockModelToSingleStockItemDto(stock), {
+      itemId: 'item-1',
+      sku: 'SKU-1',
+      color: 'BLACK',
+      prices: createDto.prices,
+      name: 'Book',
+      itemDescription: 'A book',
+      size: 'M',
+      availableQty: 4,
+      photos: createDto.photos,
+    });
+    assert.deepEqual(mapper.mapStockModelToStockItemUpdateResponseDto(stock), {
       itemId: 'item-1',
       sku: 'SKU-1',
       prices: createDto.prices,

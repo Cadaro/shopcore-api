@@ -9,6 +9,7 @@ import Order from '#models/order';
 import Stock from '#models/stock';
 import OrderService from '#services/order_service';
 import { randomUUID } from 'crypto';
+import { DateTime } from 'luxon';
 
 test.group('Orders create for stock update', () => {
   const tokenService = new TokenService();
@@ -18,14 +19,20 @@ test.group('Orders create for stock update', () => {
     items: [{ ...orderCreateWithAvailableStock.items[0], itemId, qty: 1 }],
   });
 
-  const createStock = async (itemId: string, availableQty: number) =>
+  const createStock = async (
+    itemId: string,
+    availableQty: number,
+    overrides: Partial<Pick<Stock, 'isVisible' | 'deletedAt'>> = {}
+  ) =>
     Stock.create({
       itemId,
       itemDescription: 'Test item',
       name: 'Test item',
       sku: `TS${itemId.slice(0, 3).toUpperCase()}-NC${itemId.slice(3, 5).toUpperCase()}-M`,
       size: 'M',
+      isVisible: true,
       availableQty,
+      ...overrides,
     });
 
   test('should create order with available stock', async ({ client, assert }) => {
@@ -70,6 +77,36 @@ test.group('Orders create for stock update', () => {
     assert.equal((await Order.findManyBy({ userId: user.uuid })).length, orderCountBefore);
     const stockAfter = await Stock.findBy({ itemId: 'test-stock-item' });
     assert.equal(stockAfter?.availableQty, stockBefore!.availableQty);
+  });
+
+  test('rejects orders for hidden, deleted, or depleted stock with insufficient stock error', async ({
+    client,
+    assert,
+  }) => {
+    const user = await new CreateUser(generateRoleUser()).create();
+    const token = await tokenService.createToken(user);
+    const orderCountBefore = (await Order.findManyBy({ userId: user.uuid })).length;
+
+    const ineligibleStocks = [
+      { availableQty: 1, overrides: { isVisible: false } },
+      { availableQty: 1, overrides: { deletedAt: DateTime.utc() } },
+      { availableQty: 0, overrides: {} },
+    ];
+
+    for (const { availableQty, overrides } of ineligibleStocks) {
+      const itemId = randomUUID();
+      const stock = await createStock(itemId, availableQty, overrides);
+      const response = await client
+        .post('/api/orders')
+        .bearerToken(token.token)
+        .header('content-type', 'application/json')
+        .json(createOrderRequest(itemId));
+
+      response.assertStatus(409);
+      assert.equal(response.body().code, 'INSUFFICIENT_STOCK');
+      assert.equal((await Order.findManyBy({ userId: user.uuid })).length, orderCountBefore);
+      assert.equal((await Stock.findBy({ itemId }))?.availableQty, stock.availableQty);
+    }
   });
 
   test('should roll back the stock decrement when order persistence fails', async ({ assert }) => {
