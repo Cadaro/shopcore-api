@@ -21,19 +21,21 @@ export default class StockDataMapper {
   }
 
   mapStockModelToStockItemSummary(stockModel: Array<Stock>): Array<StockItemSummaryDto> {
-    return stockModel.map((stock) => {
-      return {
-        itemId: stock.itemId,
-        name: stock.name,
-        sku: stock.sku,
-        color: stock.color,
-        prices: this.mapPrices(stock),
-        availableQty: stock.availableQty,
-        thumbnail: stock.photos[0],
-        createdAt: stock.createdAt,
-        updatedAt: stock.updatedAt,
-      };
-    });
+    return stockModel.map((stock) => this.mapStockModelToStockItemSummaryDto(stock));
+  }
+
+  mapStockModelToStockItemSummaryDto(stock: Stock): StockItemSummaryDto {
+    return {
+      itemId: stock.itemId,
+      name: stock.name,
+      sku: stock.sku,
+      color: stock.color,
+      prices: this.mapPrices(stock),
+      availableQty: stock.availableQty,
+      thumbnail: stock.photos[0],
+      createdAt: stock.createdAt,
+      updatedAt: stock.updatedAt,
+    };
   }
   mapStockItemCreateDtoToStockModel(stockDto: StockItemCreateDto, sku: string): StockItemCreateDb {
     return {

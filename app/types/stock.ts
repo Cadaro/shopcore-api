@@ -25,6 +25,13 @@ export type StockItemSummaryDto = {
   updatedAt: DateTime;
 };
 
+type AdminStockFields = {
+  isVisible: boolean;
+  deletedAt: DateTime | null;
+};
+
+export type AdminStockItemSummaryDto = StockItemSummaryDto & AdminStockFields;
+
 type StockItemFields = {
   prices: Array<StockPriceDto>;
   name: string;
@@ -42,6 +49,8 @@ type StockItemResponseFields = StockItemFields & {
 export type StockItemDataDto = StockItemResponseFields & {
   color: string;
 };
+
+export type AdminStockItemDataDto = StockItemDataDto & AdminStockFields;
 
 export type StockItemUpdateResponseDto = StockItemResponseFields;
 

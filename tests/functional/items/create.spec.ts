@@ -68,6 +68,17 @@ test.group('Items create', (group) => {
     response.assertStatus(403);
   });
 
+  test('rejects stock creation with a null available quantity', async ({ client }) => {
+    const admin = await new CreateUser(generateRoleAdmin()).create();
+    const token = await createTokenForUser(admin);
+    const response = await client
+      .post('/api/admin/stocks')
+      .json({ ...newItemWithoutItemId, availableQty: null })
+      .bearerToken(token.token);
+
+    response.assertStatus(422);
+  });
+
   test('should allow staff to create and update stock', async ({ assert, client }) => {
     const staff = await new CreateUser(generateRoleStaff()).create();
     const token = await createTokenForUser(staff);
