@@ -36,6 +36,12 @@ router
         .post('admin/stocks', [AdminStocksController, 'store'])
         .use(middleware.permission({ permission: Permission.PRODUCTS_MANAGE }));
       router
+        .get('admin/stocks', [AdminStocksController, 'index'])
+        .use(middleware.permission({ permission: Permission.PRODUCTS_MANAGE }));
+      router
+        .get('admin/stocks/:itemId', [AdminStocksController, 'show'])
+        .use(middleware.permission({ permission: Permission.PRODUCTS_MANAGE }));
+      router
         .resource('orders', OrdersController)
         .params({ orders: 'orderId' })
         .apiOnly()
