@@ -4,7 +4,7 @@ import Stock from '#models/stock';
 import { Currency } from '#types/enum/currency_code';
 
 test.group('Stock mappers', () => {
-  test('maps stock create, update, summary and detail values', ({ assert }) => {
+  test('maps stock create, summary and detail values', ({ assert }) => {
     const mapper = new StockDataMapper();
     const createDto = {
       itemId: 'item-1',
@@ -29,20 +29,6 @@ test.group('Stock mappers', () => {
       photos: [{ url: '/book.jpg', name: 'front' }],
       prices: createDto.prices,
     });
-    const updateDto = {
-      name: createDto.name,
-      itemDescription: createDto.itemDescription,
-      size: createDto.size,
-      availableQty: createDto.availableQty,
-      photos: createDto.photos,
-      prices: createDto.prices,
-    };
-    assert.deepEqual(mapper.mapStockItemUpdateDtoToStockModel('item-1', updateDto, 'SKU-1'), {
-      itemId: 'item-1',
-      sku: 'SKU-1',
-      ...updateDto,
-    });
-
     const stock = Object.assign(new Stock(), {
       ...createDto,
       sku: 'SKU-1',
@@ -64,16 +50,6 @@ test.group('Stock mappers', () => {
       itemId: 'item-1',
       sku: 'SKU-1',
       color: 'BLACK',
-      prices: createDto.prices,
-      name: 'Book',
-      itemDescription: 'A book',
-      size: 'M',
-      availableQty: 4,
-      photos: createDto.photos,
-    });
-    assert.deepEqual(mapper.mapStockModelToStockItemUpdateResponseDto(stock), {
-      itemId: 'item-1',
-      sku: 'SKU-1',
       prices: createDto.prices,
       name: 'Book',
       itemDescription: 'A book',

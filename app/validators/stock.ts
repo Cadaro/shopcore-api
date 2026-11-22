@@ -1,4 +1,5 @@
 import { Currency } from '#types/enum/currency_code';
+import { DomainRuleException } from '#exceptions/domain_exception';
 import vine from '@vinejs/vine';
 
 const stockFields = {
@@ -35,4 +36,41 @@ export const createStockValidator = vine.create(
   })
 );
 
-export const updateStockValidator = vine.create(vine.object(stockFields));
+export const updateStockValidator = vine.create(
+  vine.object({
+    prices: stockFields.prices.clone().optional(),
+    name: stockFields.name.clone().optional(),
+    itemDescription: stockFields.itemDescription.clone().optional(),
+    availableQty: vine.number({ strict: true }).min(0).withoutDecimals().optional(),
+    photos: stockFields.photos.clone().minLength(1).optional(),
+    isVisible: vine.boolean({ strict: true }).optional(),
+  })
+);
+
+export function rejectEmptyStockUpdateValues(body: unknown): void {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return;
+  const data = body as Record<string, unknown>;
+  const fields = ['prices', 'name', 'itemDescription', 'availableQty', 'photos', 'isVisible'];
+  const invalid = fields.find((field) => data[field] === null || data[field] === '');
+  if (invalid) {
+    throw new DomainRuleException('Invalid stock update', [
+      { field: invalid, rule: 'required', message: 'Value cannot be null or empty' },
+    ]);
+  }
+  if (Array.isArray(data.photos)) {
+    for (const [index, photo] of data.photos.entries()) {
+      if (photo && typeof photo === 'object' && !Array.isArray(photo)) {
+        const name = (photo as Record<string, unknown>).name;
+        if (name === null || name === '') {
+          throw new DomainRuleException('Invalid stock update', [
+            {
+              field: `photos.${index}.name`,
+              rule: 'required',
+              message: 'Value cannot be null or empty',
+            },
+          ]);
+        }
+      }
+    }
+  }
+}

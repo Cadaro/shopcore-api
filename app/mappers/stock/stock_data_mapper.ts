@@ -3,11 +3,8 @@ import {
   StockItemCreateDto,
   StockItemCreateDb,
   StockItemDataDto,
-  StockItemDb,
   StockItemSummaryDto,
   StockPriceDto,
-  StockItemUpdateDto,
-  StockItemUpdateResponseDto,
 } from '#types/stock';
 
 export default class StockDataMapper {
@@ -51,30 +48,11 @@ export default class StockDataMapper {
       photos: stockDto.photos,
     };
   }
-  mapStockItemUpdateDtoToStockModel(
-    itemId: string,
-    stockDto: StockItemUpdateDto,
-    sku: string
-  ): StockItemDb {
-    return {
-      itemId,
-      sku,
-      prices: stockDto.prices,
-      name: stockDto.name,
-      itemDescription: stockDto.itemDescription,
-      size: stockDto.size,
-      availableQty: stockDto.availableQty,
-      photos: stockDto.photos,
-    };
-  }
   mapStockModelToSingleStockItemDto(stockModel: Stock): StockItemDataDto {
     return {
       ...this.mapStockModelToStockItemBaseDto(stockModel),
       color: stockModel.color,
     };
-  }
-  mapStockModelToStockItemUpdateResponseDto(stockModel: Stock): StockItemUpdateResponseDto {
-    return this.mapStockModelToStockItemBaseDto(stockModel);
   }
   private mapStockModelToStockItemBaseDto(stockModel: Stock) {
     return {

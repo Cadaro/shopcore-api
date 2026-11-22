@@ -1,6 +1,5 @@
 import StockService from '#services/stock_service';
-import { StockItemDataDto, StockItemUpdateDto } from '#types/stock';
-import { updateStockValidator } from '#validators/stock';
+import { StockItemDataDto } from '#types/stock';
 import { inject } from '@adonisjs/core';
 import type { HttpContext } from '@adonisjs/core/http';
 import { createPaginationValidator } from '#validators/pagination';
@@ -24,11 +23,5 @@ export default class StocksController {
       params.itemId
     );
     return response.ok(singleStockItem);
-  }
-
-  async update({ params, request, response }: HttpContext) {
-    const stock: StockItemUpdateDto = await request.validateUsing(updateStockValidator);
-    const updatedStock = await this.stockService.updateSingleItemStock(params.itemId, stock);
-    return response.ok(updatedStock);
   }
 }

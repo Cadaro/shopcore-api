@@ -28,8 +28,7 @@ router
         .resource('stocks', StocksController)
         .params({ stocks: 'itemId' })
         .apiOnly()
-        .only(['index', 'show', 'update'])
-        .use('update', middleware.permission({ permission: Permission.PRODUCTS_MANAGE }))
+        .only(['index', 'show'])
         .use('index', middleware.businessRateLimit({ group: 'read', allowGuests: true }))
         .use('show', middleware.businessRateLimit({ group: 'read', allowGuests: true }));
       router
@@ -40,6 +39,12 @@ router
         .use(middleware.permission({ permission: Permission.PRODUCTS_MANAGE }));
       router
         .get('admin/stocks/:itemId', [AdminStocksController, 'show'])
+        .use(middleware.permission({ permission: Permission.PRODUCTS_MANAGE }));
+      router
+        .patch('admin/stocks/:itemId', [AdminStocksController, 'update'])
+        .use(middleware.permission({ permission: Permission.PRODUCTS_MANAGE }));
+      router
+        .delete('admin/stocks/:itemId', [AdminStocksController, 'destroy'])
         .use(middleware.permission({ permission: Permission.PRODUCTS_MANAGE }));
       router
         .resource('orders', OrdersController)

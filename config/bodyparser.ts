@@ -23,6 +23,7 @@ const bodyParserConfig = defineConfig({
     convertEmptyStringsToNull: true,
     types: [
       'application/json',
+      'application/merge-patch+json',
       'application/json-patch+json',
       'application/vnd.api+json',
       'application/csp-report',

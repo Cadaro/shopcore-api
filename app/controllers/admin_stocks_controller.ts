@@ -1,5 +1,9 @@
 import AdminStockService from '#services/admin_stock_service';
-import { createStockValidator } from '#validators/stock';
+import {
+  createStockValidator,
+  rejectEmptyStockUpdateValues,
+  updateStockValidator,
+} from '#validators/stock';
 import { inject } from '@adonisjs/core';
 import type { HttpContext } from '@adonisjs/core/http';
 import { createPaginationValidator } from '#validators/pagination';
@@ -23,5 +27,15 @@ export default class AdminStocksController {
   async store({ request, response }: HttpContext) {
     const stock = await request.validateUsing(createStockValidator);
     return response.created(await this.stockService.createSingleItemStock(stock));
+  }
+
+  async update({ params, request, response }: HttpContext) {
+    rejectEmptyStockUpdateValues(request.body());
+    const stock = await request.validateUsing(updateStockValidator);
+    return response.ok(await this.stockService.updateSingleItemStock(params.itemId, stock));
+  }
+
+  async destroy({ params, response }: HttpContext) {
+    return response.ok(await this.stockService.deleteSingleItemStock(params.itemId));
   }
 }

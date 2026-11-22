@@ -1,13 +1,6 @@
 import StockDataMapper from '#mappers/stock/stock_data_mapper';
 import Stock from '#models/stock';
-import {
-  ItemWithQty,
-  StockItemDataDto,
-  StockItemSummaryDto,
-  StockItemUpdateDto,
-  StockItemUpdateResponseDto,
-} from '#types/stock';
-import db from '@adonisjs/lucid/services/db';
+import { ItemWithQty, StockItemDataDto, StockItemSummaryDto } from '#types/stock';
 import {
   InsufficientStockError,
   NotFoundException,
@@ -79,33 +72,5 @@ export default class StockService {
         throw new InsufficientStockError(`Insufficient stock for item ${item.itemId}`);
       }
     }
-  }
-
-  async updateSingleItemStock(
-    itemId: string,
-    stock: StockItemUpdateDto
-  ): Promise<StockItemUpdateResponseDto> {
-    return db.transaction(async (trx) => {
-      const stockModel = await Stock.findBy({ itemId }, { client: trx });
-      if (!stockModel) {
-        throw new NotFoundException(`Stock item ${itemId} not found`);
-      }
-
-      const updatedStock = this.stockDataMapper.mapStockItemUpdateDtoToStockModel(
-        itemId,
-        stock,
-        stockModel.sku
-      );
-      const { photos, prices, ...stockAttributes } = updatedStock;
-      await stockModel.merge(stockAttributes).save();
-      await stockModel.related('photos').query().delete();
-      await stockModel.related('prices').query().delete();
-      await stockModel.related('photos').createMany(photos);
-      await stockModel.related('prices').createMany(prices);
-      await stockModel.load('photos');
-      await stockModel.load('prices', (query) => query.orderBy('id'));
-
-      return this.stockDataMapper.mapStockModelToStockItemUpdateResponseDto(stockModel);
-    });
   }
 }

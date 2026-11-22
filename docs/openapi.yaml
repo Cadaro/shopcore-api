@@ -560,37 +560,6 @@ components:
               format: date-time
               nullable: true
 
-    StockItemUpdateResponseDto:
-      type: object
-      properties:
-        itemId:
-          type: string
-        sku:
-          type: string
-          description: Globally unique generated SKU, 12–17 characters in the format `NNRRR-CCRR-SIZE`.
-          minLength: 12
-          maxLength: 17
-          pattern: '^[A-Z0-9]{5}-[A-Z0-9]{4}-[A-Z0-9]{1,6}$'
-        prices:
-          type: array
-          description: One price per currency
-          items:
-            $ref: '#/components/schemas/StockPrice'
-        name:
-          type: string
-        itemDescription:
-          type: string
-        size:
-          type: string
-          nullable: true
-        availableQty:
-          type: integer
-          minimum: 0
-        photos:
-          type: array
-          items:
-            $ref: '#/components/schemas/StockPhoto'
-
     StockItemCreateDto:
       type: object
       required:
@@ -668,12 +637,6 @@ components:
 
     StockItemUpdateDto:
       type: object
-      required:
-        - prices
-        - name
-        - itemDescription
-        - availableQty
-        - photos
       properties:
         prices:
           type: array
@@ -687,17 +650,18 @@ components:
         itemDescription:
           type: string
           description: 'short item description'
-        size:
-          type: string
-          description: 'size of an item, for example XL, 34...'
         availableQty:
           type: integer
+          minimum: 0
           description: 'available quantity of an item'
         photos:
           type: array
+          minItems: 1
           items:
             $ref: '#/components/schemas/StockPhoto'
           description: 'list of photos'
+        isVisible:
+          type: boolean
       example:
         prices:
           - currency: 'PLN'
@@ -710,14 +674,26 @@ components:
             vatRate: 0.23
         name: 'Blue T-Shirt'
         itemDescription: 'Comfortable cotton t-shirt in blue color'
-        size: 'XL'
         availableQty: 100
+        isVisible: true
         photos:
           - url: 'https://example.com/photo1.jpg'
             name: 'Front view'
           - url: 'https://example.com/photo2.jpg'
             name: 'Back view'
-      description: Full replacement of stock details, including the complete prices and photos lists.
+      description: Partial update. Omitted fields are unchanged; supplied prices and photos replace their entire lists. Null and empty values are invalid. itemId, sku, color and size are ignored.
+
+    StockItemDeletedDto:
+      type: object
+      required:
+        - itemId
+        - deletedAt
+      properties:
+        itemId:
+          type: string
+        deletedAt:
+          type: string
+          format: date-time
 
     DeliveryData:
       type: object
@@ -1459,6 +1435,109 @@ paths:
                 $ref: '#/components/schemas/NotFoundException'
         default:
           $ref: '#/components/responses/InternalServerError'
+    patch:
+      tags:
+        - stocks
+      summary: Partially update stock
+      description: Requires `products.manage`. Missing fields are unchanged; prices and photos are replaced when supplied. Deleted items cannot be updated.
+      x-required-permission: products.manage
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockItemUpdateDto'
+          application/merge-patch+json:
+            schema:
+              $ref: '#/components/schemas/StockItemUpdateDto'
+      responses:
+        '200':
+          description: Stock updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminStockItemDataDto'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedException'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: Stock item not found or deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DomainRuleException'
+        default:
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - stocks
+      summary: Soft-delete stock
+      description: Requires `products.manage`. Stock can only be deleted when availableQty is zero.
+      x-required-permission: products.manage
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Stock deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockItemDeletedDto'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedException'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenException'
+        '404':
+          description: Stock item not found or already deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundException'
+        '409':
+          description: Stock quantity is not zero
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictException'
+        default:
+          $ref: '#/components/responses/InternalServerError'
   /api/stocks/{itemId}:
     get:
       tags:
@@ -1500,59 +1579,6 @@ paths:
                 $ref: '#/components/schemas/PreconditionRequiredException'
         '429':
           $ref: '#/components/responses/TooManyRequests'
-        default:
-          $ref: '#/components/responses/InternalServerError'
-    put:
-      tags:
-        - stocks
-      summary: Replace stock details
-      description: Replace a stock item and its complete prices list. Requires `products.manage` (staff or admin).
-      x-required-permission: products.manage
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: itemId
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/StockItemUpdateDto'
-      responses:
-        '200':
-          description: Stock updated
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/StockItemUpdateResponseDto'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UnauthorizedException'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ForbiddenException'
-        '404':
-          description: Stock item not found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/NotFoundException'
-        '422':
-          description: Validation error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/DomainRuleException'
         default:
           $ref: '#/components/responses/InternalServerError'
   /api/orders:

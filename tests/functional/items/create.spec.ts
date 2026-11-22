@@ -89,11 +89,11 @@ test.group('Items create', (group) => {
     created.assertStatus(201);
 
     const updated = await client
-      .put(`/api/stocks/${created.body().itemId}`)
+      .patch(`/api/admin/stocks/${created.body().itemId}`)
       .json(newItemWithoutItemId)
       .bearerToken(token.token);
     updated.assertStatus(200);
-    assert.isUndefined(updated.body().color);
+    assert.equal(updated.body().color, newItemWithoutItemId.color);
   });
 
   test('rejects fractional minor-unit VAT amounts', async ({ client }) => {
@@ -355,7 +355,7 @@ test.group('Items create', (group) => {
       ],
     };
     const updated = await client
-      .put(`/api/stocks/${itemId}`)
+      .patch(`/api/admin/stocks/${itemId}`)
       .json(replacement)
       .bearerToken(token.token);
     updated.assertStatus(200);
@@ -371,7 +371,7 @@ test.group('Items create', (group) => {
     );
 
     const invalidUpdate = await client
-      .put(`/api/stocks/${itemId}`)
+      .patch(`/api/admin/stocks/${itemId}`)
       .json({
         ...replacement,
         prices: [
@@ -385,7 +385,7 @@ test.group('Items create', (group) => {
     assert.deepEqual(detail.body().prices, replacement.prices);
   });
 
-  test('preserves existing update behavior for empty photos', async ({ client }) => {
+  test('rejects empty photos on update', async ({ client }) => {
     const admin = await new CreateUser(generateRoleAdmin()).create();
     const token = await createTokenForUser(admin);
     const created = await client
@@ -394,10 +394,10 @@ test.group('Items create', (group) => {
       .bearerToken(token.token);
     created.assertStatus(201);
     const updated = await client
-      .put(`/api/stocks/${created.body().itemId}`)
+      .patch(`/api/admin/stocks/${created.body().itemId}`)
       .json({ ...newItemWithoutItemId, photos: [] })
       .bearerToken(token.token);
-    updated.assertStatus(200);
+    updated.assertStatus(422);
   });
 
   test('rolls back the stock when a price insert fails', async ({ assert }) => {

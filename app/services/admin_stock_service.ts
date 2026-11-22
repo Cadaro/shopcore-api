@@ -14,12 +14,14 @@ import {
   AdminStockItemSummaryDto,
   StockItemCreateDto,
   StockItemCreatedDto,
+  StockItemUpdateDto,
 } from '#types/stock';
 import db from '@adonisjs/lucid/services/db';
 import { randomUUID } from 'node:crypto';
 import { PaginationQuery } from '#types/pagination';
 import paginationConfig from '#config/pagination';
 import { stockSortColumns } from '#common/pagination';
+import { DateTime } from 'luxon';
 
 export default class AdminStockService {
   private adminStockDataMapper = new AdminStockDataMapper();
@@ -87,5 +89,57 @@ export default class AdminStockService {
       return savedStockHead.itemId;
     });
     return { itemId: createdStockItemId };
+  }
+
+  async updateSingleItemStock(
+    itemId: string,
+    update: StockItemUpdateDto
+  ): Promise<AdminStockItemDataDto> {
+    return db.transaction(async (trx) => {
+      const stock = await Stock.query({ client: trx })
+        .where('item_id', itemId)
+        .whereNull('deleted_at')
+        .forUpdate()
+        .first();
+      if (!stock) {
+        throw new NotFoundException(`Stock item ${itemId} not found`);
+      }
+
+      const { photos, prices, ...attributes } = update;
+      if (Object.keys(attributes).length > 0) {
+        await stock.merge(attributes).save();
+      }
+      if (photos !== undefined) {
+        await stock.related('photos').query().delete();
+        await stock.related('photos').createMany(photos);
+      }
+      if (prices !== undefined) {
+        await stock.related('prices').query().delete();
+        await stock.related('prices').createMany(prices);
+      }
+      await stock.load('photos');
+      await stock.load('prices', (query) => query.orderBy('id'));
+      return this.adminStockDataMapper.mapStockModelToAdminStockItem(stock);
+    });
+  }
+
+  async deleteSingleItemStock(itemId: string): Promise<{ itemId: string; deletedAt: DateTime }> {
+    return db.transaction(async (trx) => {
+      const stock = await Stock.query({ client: trx })
+        .where('item_id', itemId)
+        .whereNull('deleted_at')
+        .forUpdate()
+        .first();
+      if (!stock) {
+        throw new NotFoundException(`Stock item ${itemId} not found`);
+      }
+      if (stock.availableQty !== 0) {
+        throw new ConflictException('Stock can only be deleted when available quantity is zero');
+      }
+      const deletedAt = DateTime.utc().startOf('second');
+      stock.deletedAt = deletedAt;
+      await stock.save();
+      return { itemId: stock.itemId, deletedAt };
+    });
   }
 }
