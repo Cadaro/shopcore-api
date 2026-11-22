@@ -52,15 +52,15 @@ export type StockItemDataDto = StockItemResponseFields & {
 
 export type AdminStockItemDataDto = StockItemDataDto & AdminStockFields;
 
-export type StockItemUpdateResponseDto = StockItemResponseFields;
-
 export type StockItemCreateDto = StockItemFields & {
   itemId?: string;
   color: string;
   isVisible: boolean;
 };
 
-export type StockItemUpdateDto = StockItemFields;
+export type StockItemUpdateDto = Partial<Omit<StockItemFields, 'size'>> & {
+  isVisible?: boolean;
+};
 
 export type StockItemCreatedDto = {
   itemId: string;
