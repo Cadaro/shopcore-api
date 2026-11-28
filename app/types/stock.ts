@@ -28,6 +28,7 @@ export type StockItemSummaryDto = {
 type AdminStockFields = {
   isVisible: boolean;
   deletedAt: DateTime | null;
+  version: number;
 };
 
 export type AdminStockItemSummaryDto = StockItemSummaryDto & AdminStockFields;

@@ -153,6 +153,18 @@ components:
         message:
           type: string
           example: Guest session is required. Initialize one with POST /api/v1/guests.
+    PreconditionFailedException:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: PRECONDITION_FAILED
+        message:
+          type: string
+          example: Stock version is stale
     TooManyRequestsException:
       type: object
       required:
@@ -456,7 +468,11 @@ components:
           required:
             - isVisible
             - deletedAt
+            - version
           properties:
+            version:
+              type: integer
+              minimum: 1
             isVisible:
               type: boolean
             deletedAt:
@@ -552,7 +568,11 @@ components:
           required:
             - isVisible
             - deletedAt
+            - version
           properties:
+            version:
+              type: integer
+              minimum: 1
             isVisible:
               type: boolean
             deletedAt:
@@ -1439,7 +1459,7 @@ paths:
       tags:
         - stocks
       summary: Partially update stock
-      description: Requires `products.manage`. Missing fields are unchanged; prices and photos are replaced when supplied. Deleted items cannot be updated.
+      description: Requires `products.manage`. Missing fields are unchanged; prices and photos are replaced when supplied. Deleted items cannot be updated. Read the admin stock version and send it as a single strong quoted numeric If-Match tag. Empty or identical updates do not increment the version. On a stale version, fetch the latest stock and decide which changes to resubmit; the API does not merge or retry updates.
       x-required-permission: products.manage
       security:
         - bearerAuth: []
@@ -1449,6 +1469,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: If-Match
+          in: header
+          required: true
+          description: A single strong quoted decimal version from 1 to 2147483647 without leading zeros, for example `"1"`; wildcard, weak tags, and lists are not supported.
+          schema:
+            type: string
+            example: '"1"'
       requestBody:
         required: true
         content:
@@ -1483,12 +1510,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/NotFoundException'
+        '412':
+          description: Stock version is stale; fetch the latest stock before resubmitting changes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionFailedException'
         '422':
-          description: Validation error
+          description: Invalid update or malformed If-Match header. The code is DOMAIN_RULE_VIOLATION or VALIDATION_ERROR.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/DomainRuleException'
+        '428':
+          description: If-Match header is required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreconditionRequiredException'
+              example:
+                code: PRECONDITION_REQUIRED
+                message: If-Match is required
         default:
           $ref: '#/components/responses/InternalServerError'
     delete:
