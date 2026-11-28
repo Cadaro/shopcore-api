@@ -58,6 +58,12 @@ export class PreconditionRequiredException extends DomainException {
   }
 }
 
+export class PreconditionFailedException extends DomainException {
+  constructor(message: string) {
+    super(message, 'PRECONDITION_FAILED', 412);
+  }
+}
+
 export class DomainRuleException extends DomainException {
   constructor(message: string, details?: ErrorDetail[]) {
     super(message, 'DOMAIN_RULE_VIOLATION', 422, details);

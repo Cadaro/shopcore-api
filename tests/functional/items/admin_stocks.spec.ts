@@ -49,11 +49,16 @@ test.group('Admin stocks', () => {
       if (!listedItemIds.includes(stock.itemId)) {
         throw new Error(`Admin stock list did not include ${stock.itemId}`);
       }
+      assert.equal(
+        list.body().data.find((item: { itemId: string }) => item.itemId === stock.itemId).version,
+        1
+      );
 
       const detail = await client.get(`/api/admin/stocks/${stock.itemId}`).bearerToken(token.token);
       detail.assertStatus(200);
       detail.assertBodyContains({ itemId: stock.itemId, availableQty: 0 });
       detail.assertBodyContains({ isVisible: false });
+      assert.equal(detail.body().version, 1);
       assert.isString(detail.body().deletedAt);
     }
   });

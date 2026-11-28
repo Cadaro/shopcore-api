@@ -10,6 +10,7 @@ export default class AdminStockDataMapper {
       ...this.stockDataMapper.mapStockModelToStockItemSummaryDto(stock),
       isVisible: Boolean(stock.isVisible),
       deletedAt: stock.deletedAt,
+      version: stock.version,
     }));
   }
 
@@ -18,6 +19,7 @@ export default class AdminStockDataMapper {
       ...this.stockDataMapper.mapStockModelToSingleStockItemDto(stock),
       isVisible: Boolean(stock.isVisible),
       deletedAt: stock.deletedAt,
+      version: stock.version,
     };
   }
 }

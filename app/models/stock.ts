@@ -39,6 +39,9 @@ export default class Stock extends BaseModel {
   @column()
   declare availableQty: number;
 
+  @column()
+  declare version: number;
+
   @column.dateTime({ autoCreate: true, serializeAs: null })
   declare createdAt: DateTime;
 

@@ -4,6 +4,7 @@ import {
   DomainRuleException,
   InternalServerException,
   NotFoundException,
+  PreconditionFailedException,
 } from '#exceptions/domain_exception';
 import AdminStockDataMapper from '#mappers/stock/admin_stock_data_mapper';
 import PaginationDataMapper from '#mappers/pagination_data_mapper';
@@ -39,30 +40,40 @@ export default class AdminStockService {
       ]);
     }
 
-    const paginator = await Stock.query()
-      .where('available_qty', '>=', 0)
-      .orderBy(sortColumn, sortDirection)
-      .orderBy('id', 'asc')
-      .preload('photos')
-      .preload('prices', (query) => query.orderBy('id'))
-      .paginate(page, perPage);
-    const stocks: Array<AdminStockItemSummaryDto> =
-      this.adminStockDataMapper.mapStockModelToAdminStockItemSummary(paginator.all());
-    const meta = paginator.getMeta();
-    return this.paginationDataMapper.map(stocks, meta.currentPage, meta.perPage, meta.total);
+    return db.transaction(
+      async (trx) => {
+        const paginator = await Stock.query({ client: trx })
+          .where('available_qty', '>=', 0)
+          .orderBy(sortColumn, sortDirection)
+          .orderBy('id', 'asc')
+          .preload('photos', (query) => query.orderBy('id'))
+          .preload('prices', (query) => query.orderBy('id'))
+          .paginate(page, perPage);
+        const stocks: Array<AdminStockItemSummaryDto> =
+          this.adminStockDataMapper.mapStockModelToAdminStockItemSummary(paginator.all());
+        const meta = paginator.getMeta();
+        return this.paginationDataMapper.map(stocks, meta.currentPage, meta.perPage, meta.total);
+      },
+      { isolationLevel: 'repeatable read' }
+    );
   }
 
   async fetchSingleStockItem(itemId: string): Promise<AdminStockItemDataDto> {
-    const stock = await Stock.query()
-      .where('item_id', itemId)
-      .where('available_qty', '>=', 0)
-      .first();
-    if (!stock) {
-      throw new NotFoundException(`Stock item ${itemId} not found`);
-    }
-    await stock.load('photos');
-    await stock.load('prices', (query) => query.orderBy('id'));
-    return this.adminStockDataMapper.mapStockModelToAdminStockItem(stock);
+    return db.transaction(
+      async (trx) => {
+        const stock = await Stock.query({ client: trx })
+          .where('item_id', itemId)
+          .where('available_qty', '>=', 0)
+          .first();
+        if (!stock) {
+          throw new NotFoundException(`Stock item ${itemId} not found`);
+        }
+        await stock.load('photos', (query) => query.orderBy('id'));
+        await stock.load('prices', (query) => query.orderBy('id'));
+        return this.adminStockDataMapper.mapStockModelToAdminStockItem(stock);
+      },
+      { isolationLevel: 'repeatable read' }
+    );
   }
 
   async createSingleItemStock(stock: StockItemCreateDto): Promise<StockItemCreatedDto> {
@@ -93,7 +104,8 @@ export default class AdminStockService {
 
   async updateSingleItemStock(
     itemId: string,
-    update: StockItemUpdateDto
+    update: StockItemUpdateDto,
+    expectedVersion: number
   ): Promise<AdminStockItemDataDto> {
     return db.transaction(async (trx) => {
       const stock = await Stock.query({ client: trx })
@@ -104,23 +116,91 @@ export default class AdminStockService {
       if (!stock) {
         throw new NotFoundException(`Stock item ${itemId} not found`);
       }
+      if (stock.version !== expectedVersion) {
+        throw new PreconditionFailedException('Stock version is stale');
+      }
 
       const { photos, prices, ...attributes } = update;
-      if (Object.keys(attributes).length > 0) {
+      await stock.load('photos', (query) => query.orderBy('id'));
+      await stock.load('prices', (query) => query.orderBy('id'));
+      const { attributesChanged, photosChanged, pricesChanged } = this.getStockChanges(
+        stock,
+        update
+      );
+      if (!attributesChanged && !photosChanged && !pricesChanged) {
+        return this.adminStockDataMapper.mapStockModelToAdminStockItem(stock);
+      }
+      const affected = await trx
+        .knexQuery()
+        .from('stocks')
+        .where('id', stock.id)
+        .whereNull('deleted_at')
+        .where('version', expectedVersion)
+        .increment('version', 1);
+      if (affected !== 1) {
+        const current = await trx
+          .from('stocks')
+          .where('id', stock.id)
+          .whereNull('deleted_at')
+          .first();
+        if (!current) throw new NotFoundException(`Stock item ${itemId} not found`);
+        throw new PreconditionFailedException('Stock version is stale');
+      }
+      stock.version = expectedVersion + 1;
+      if (attributesChanged) {
         await stock.merge(attributes).save();
       }
-      if (photos !== undefined) {
+      if (photosChanged && photos !== undefined) {
         await stock.related('photos').query().delete();
         await stock.related('photos').createMany(photos);
       }
-      if (prices !== undefined) {
+      if (pricesChanged && prices !== undefined) {
         await stock.related('prices').query().delete();
         await stock.related('prices').createMany(prices);
       }
-      await stock.load('photos');
+      await stock.load('photos', (query) => query.orderBy('id'));
       await stock.load('prices', (query) => query.orderBy('id'));
       return this.adminStockDataMapper.mapStockModelToAdminStockItem(stock);
     });
+  }
+
+  private getStockChanges(stock: Stock, update: StockItemUpdateDto) {
+    const attributesChanged =
+      (update.name !== undefined && update.name !== stock.name) ||
+      (update.itemDescription !== undefined && update.itemDescription !== stock.itemDescription) ||
+      (update.availableQty !== undefined && update.availableQty !== stock.availableQty) ||
+      (update.isVisible !== undefined && update.isVisible !== Boolean(stock.isVisible));
+    return {
+      attributesChanged,
+      photosChanged: update.photos !== undefined && this.havePhotosChanged(stock, update.photos),
+      pricesChanged: update.prices !== undefined && this.havePricesChanged(stock, update.prices),
+    };
+  }
+
+  private havePhotosChanged(stock: Stock, photos: NonNullable<StockItemUpdateDto['photos']>) {
+    return (
+      photos.length !== stock.photos.length ||
+      photos.some(
+        (photo, i) =>
+          photo.url !== stock.photos[i].url ||
+          (photo.name ?? null) !== (stock.photos[i].name ?? null)
+      )
+    );
+  }
+
+  private havePricesChanged(stock: Stock, prices: NonNullable<StockItemUpdateDto['prices']>) {
+    return (
+      prices.length !== stock.prices.length ||
+      prices.some((price, i) => {
+        const current = stock.prices[i];
+        return (
+          price.currency !== current.currency ||
+          price.price !== current.price ||
+          price.vatAmount !== current.vatAmount ||
+          price.vatRate !== Number(current.vatRate)
+        );
+      })
+    );
   }
 
   async deleteSingleItemStock(itemId: string): Promise<{ itemId: string; deletedAt: DateTime }> {

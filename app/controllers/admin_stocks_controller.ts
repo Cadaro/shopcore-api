@@ -4,6 +4,7 @@ import {
   rejectEmptyStockUpdateValues,
   updateStockValidator,
 } from '#validators/stock';
+import { parseIfMatchVersion } from '#validators/if_match';
 import { inject } from '@adonisjs/core';
 import type { HttpContext } from '@adonisjs/core/http';
 import { createPaginationValidator } from '#validators/pagination';
@@ -30,9 +31,12 @@ export default class AdminStocksController {
   }
 
   async update({ params, request, response }: HttpContext) {
+    const expectedVersion = parseIfMatchVersion(request.header('if-match'));
     rejectEmptyStockUpdateValues(request.body());
     const stock = await request.validateUsing(updateStockValidator);
-    return response.ok(await this.stockService.updateSingleItemStock(params.itemId, stock));
+    return response.ok(
+      await this.stockService.updateSingleItemStock(params.itemId, stock, expectedVersion)
+    );
   }
 
   async destroy({ params, response }: HttpContext) {

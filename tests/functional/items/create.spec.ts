@@ -90,6 +90,7 @@ test.group('Items create', (group) => {
 
     const updated = await client
       .patch(`/api/admin/stocks/${created.body().itemId}`)
+      .header('If-Match', '"1"')
       .json(newItemWithoutItemId)
       .bearerToken(token.token);
     updated.assertStatus(200);
@@ -356,6 +357,7 @@ test.group('Items create', (group) => {
     };
     const updated = await client
       .patch(`/api/admin/stocks/${itemId}`)
+      .header('If-Match', '"1"')
       .json(replacement)
       .bearerToken(token.token);
     updated.assertStatus(200);
@@ -372,6 +374,7 @@ test.group('Items create', (group) => {
 
     const invalidUpdate = await client
       .patch(`/api/admin/stocks/${itemId}`)
+      .header('If-Match', `"${updated.body().version}"`)
       .json({
         ...replacement,
         prices: [
@@ -395,6 +398,7 @@ test.group('Items create', (group) => {
     created.assertStatus(201);
     const updated = await client
       .patch(`/api/admin/stocks/${created.body().itemId}`)
+      .header('If-Match', '"1"')
       .json({ ...newItemWithoutItemId, photos: [] })
       .bearerToken(token.token);
     updated.assertStatus(422);

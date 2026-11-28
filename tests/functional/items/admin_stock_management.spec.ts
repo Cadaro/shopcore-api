@@ -30,16 +30,22 @@ test.group('Admin stock management', () => {
   test('updates only supplied fields and ignores immutable fields', async ({ assert, client }) => {
     const { token, itemId } = await setupStock();
     const before = (await client.get(`/api/admin/stocks/${itemId}`).bearerToken(token)).body();
-    const response = await client.patch(`/api/admin/stocks/${itemId}`).bearerToken(token).json({
-      name: 'Updated item',
-      availableQty: 0,
-      isVisible: false,
-      itemId: null,
-      sku: '',
-      color: 'WHITE',
-      size: 'L',
-    });
+    const response = await client
+      .patch(`/api/admin/stocks/${itemId}`)
+      .bearerToken(token)
+      .header('If-Match', `"${before.version}"`)
+      .json({
+        name: 'Updated item',
+        availableQty: 0,
+        isVisible: false,
+        itemId: null,
+        sku: '',
+        color: 'WHITE',
+        size: 'L',
+      });
     response.assertStatus(200);
+    assert.equal(before.version, 1);
+    assert.equal(response.body().version, 2);
     assert.equal(response.body().name, 'Updated item');
     assert.equal(response.body().availableQty, 0);
     assert.isFalse(response.body().isVisible);
@@ -51,6 +57,7 @@ test.group('Admin stock management', () => {
       const noOp = await client
         .patch(`/api/admin/stocks/${itemId}`)
         .bearerToken(token)
+        .header('If-Match', `"${response.body().version}"`)
         .json(payload);
       noOp.assertStatus(200);
       assert.deepEqual(noOp.body(), response.body());
@@ -58,6 +65,7 @@ test.group('Admin stock management', () => {
     const mergePatch = await client
       .patch(`/api/admin/stocks/${itemId}`)
       .bearerToken(token)
+      .header('If-Match', `"${response.body().version}"`)
       .header('content-type', 'application/merge-patch+json')
       .json({ name: 'Merge patch item' });
     mergePatch.assertStatus(200);
@@ -71,6 +79,7 @@ test.group('Admin stock management', () => {
     const response = await client
       .patch(`/api/admin/stocks/${itemId}`)
       .bearerToken(token)
+      .header('If-Match', '"1"')
       .json({ photos, prices });
     response.assertStatus(200);
     assert.deepEqual(response.body().prices, prices);
@@ -99,6 +108,7 @@ test.group('Admin stock management', () => {
       const invalid = await client
         .patch(`/api/admin/stocks/${itemId}`)
         .bearerToken(token)
+        .header('If-Match', `"${response.body().version}"`)
         .json(payload);
       invalid.assertStatus(422);
     }
@@ -135,6 +145,7 @@ test.group('Admin stock management', () => {
     const zero = await client
       .patch(`/api/admin/stocks/${itemId}`)
       .bearerToken(token)
+      .header('If-Match', '"1"')
       .json({ availableQty: 0 });
     zero.assertStatus(200);
     const deleted = await client.delete(`/api/admin/stocks/${itemId}`).bearerToken(token);
@@ -148,11 +159,16 @@ test.group('Admin stock management', () => {
       await client
         .patch(`/api/admin/stocks/${itemId}`)
         .bearerToken(token)
+        .header('If-Match', `"${zero.body().version}"`)
         .json({ isVisible: true, availableQty: 1 })
     ).assertStatus(404);
     (await client.delete(`/api/admin/stocks/${randomUUID()}`).bearerToken(token)).assertStatus(404);
     (
-      await client.patch(`/api/admin/stocks/${randomUUID()}`).bearerToken(token).json({})
+      await client
+        .patch(`/api/admin/stocks/${randomUUID()}`)
+        .bearerToken(token)
+        .header('If-Match', '"1"')
+        .json({})
     ).assertStatus(404);
   });
 
@@ -164,10 +180,15 @@ test.group('Admin stock management', () => {
     const customer = await new CreateUser(generateRoleUser()).create();
     const customerToken = (await new TokenService().createToken(customer)).token;
     (await client.get(`/api/stocks/${itemId}`).bearerToken(customerToken)).assertStatus(200);
+    assert.notProperty(
+      (await client.get(`/api/stocks/${itemId}`).bearerToken(customerToken)).body(),
+      'version'
+    );
     (
       await client
         .patch(`/api/admin/stocks/${itemId}`)
         .bearerToken(token)
+        .header('If-Match', '"1"')
         .json({ isVisible: false })
     ).assertStatus(200);
     (await client.get(`/api/stocks/${itemId}`).bearerToken(customerToken)).assertStatus(404);
@@ -178,7 +199,11 @@ test.group('Admin stock management', () => {
       itemId
     );
     (
-      await client.patch(`/api/admin/stocks/${itemId}`).bearerToken(token).json({ availableQty: 0 })
+      await client
+        .patch(`/api/admin/stocks/${itemId}`)
+        .bearerToken(token)
+        .header('If-Match', '"2"')
+        .json({ availableQty: 0 })
     ).assertStatus(200);
     (await client.delete(`/api/admin/stocks/${itemId}`).bearerToken(token)).assertStatus(200);
     (await client.get(`/api/stocks/${itemId}`).bearerToken(customerToken)).assertStatus(404);
@@ -189,11 +214,15 @@ test.group('Admin stock management', () => {
     const service = new AdminStockService();
     const before = await service.fetchSingleStockItem(itemId);
     await assert.rejects(() =>
-      service.updateSingleItemStock(itemId, {
-        name: 'Must roll back',
-        photos: [{ url: '/must-roll-back' }],
-        prices: [newItemWithoutItemId.prices[0], newItemWithoutItemId.prices[0]],
-      })
+      service.updateSingleItemStock(
+        itemId,
+        {
+          name: 'Must roll back',
+          photos: [{ url: '/must-roll-back' }],
+          prices: [newItemWithoutItemId.prices[0], newItemWithoutItemId.prices[0]],
+        },
+        before.version
+      )
     );
     const after = await service.fetchSingleStockItem(itemId);
     assert.equal(after.name, before.name);
@@ -202,6 +231,188 @@ test.group('Admin stock management', () => {
       before.photos.map(({ url, name }) => ({ url, name }))
     );
     assert.deepEqual(after.prices, before.prices);
+    assert.equal(after.version, before.version);
+  });
+
+  test('enforces If-Match and preserves data on rejected and no-op updates', async ({
+    assert,
+    client,
+  }) => {
+    const { token, itemId } = await setupStock();
+    const url = `/api/admin/stocks/${itemId}`;
+    const before = (await client.get(url).bearerToken(token)).body();
+    const change = {
+      name: 'Changed name',
+      photos: [{ url: '/changed.jpg' }],
+      prices: [{ ...newItemWithoutItemId.prices[0], price: 99.99 }],
+    };
+    (await client.patch(url).bearerToken(token).json(change)).assertStatus(428);
+    for (const header of ['1', 'W/"1"', '*', '"1", "2"', '"0"', '"01"', '"2147483648"', '""']) {
+      (
+        await client.patch(url).bearerToken(token).header('If-Match', header).json(change)
+      ).assertStatus(422);
+    }
+    (
+      await client.patch(`/api/admin/stocks/${randomUUID()}`).bearerToken(token).json({})
+    ).assertStatus(428);
+    (
+      await client
+        .patch(`/api/admin/stocks/${randomUUID()}`)
+        .bearerToken(token)
+        .header('If-Match', 'invalid')
+        .json({})
+    ).assertStatus(422);
+    (
+      await client.patch(url).bearerToken(token).header('If-Match', '"2"').json(change)
+    ).assertStatus(412);
+    assert.deepEqual((await client.get(url).bearerToken(token)).body(), before);
+
+    const noOp = await client.patch(url).bearerToken(token).header('If-Match', '"1"').json({
+      name: before.name,
+      itemDescription: before.itemDescription,
+      availableQty: before.availableQty,
+      isVisible: before.isVisible,
+      photos: before.photos,
+      prices: before.prices,
+    });
+    noOp.assertStatus(200);
+    assert.deepEqual(noOp.body(), before);
+    const updated = await client
+      .patch(url)
+      .bearerToken(token)
+      .header('If-Match', '"1"')
+      .json(change);
+    updated.assertStatus(200);
+    assert.equal(updated.body().version, 2);
+    (await client.patch(url).bearerToken(token).header('If-Match', '"1"').json({})).assertStatus(
+      412
+    );
+    (
+      await client.patch(url).bearerToken(token).header('If-Match', '"1"').json(change)
+    ).assertStatus(412);
+    assert.deepEqual((await client.get(url).bearerToken(token)).body(), updated.body());
+    const arrayOnly = await client
+      .patch(url)
+      .bearerToken(token)
+      .header('If-Match', '"2"')
+      .json({ photos: [{ url: '/without-name.jpg' }] });
+    arrayOnly.assertStatus(200);
+    assert.equal(arrayOnly.body().version, 3);
+    const samePhotos = await client
+      .patch(url)
+      .bearerToken(token)
+      .header('If-Match', '"3"')
+      .json({ photos: [{ url: '/without-name.jpg' }] });
+    samePhotos.assertStatus(200);
+    assert.deepEqual(samePhotos.body(), arrayOnly.body());
+  });
+
+  test('serializes competing PATCH requests using the same version', async ({ assert, client }) => {
+    const { token, itemId } = await setupStock();
+    let release!: () => void;
+    let locked!: () => void;
+    const firstLocked = new Promise<void>((resolve) => (locked = resolve));
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const originalSave = Stock.prototype.save;
+    let paused = false;
+    const saveMock = mock.method(Stock.prototype, 'save', async function (this: Stock) {
+      if (this.itemId === itemId && !paused) {
+        paused = true;
+        locked();
+        await gate;
+      }
+      return originalSave.call(this);
+    });
+
+    const url = `/api/admin/stocks/${itemId}`;
+    const first = client
+      .patch(url)
+      .bearerToken(token)
+      .header('If-Match', '"1"')
+      .json({ name: 'First update', photos: [{ url: '/first.jpg' }] })
+      .then((response) => response);
+    let second: Promise<Awaited<typeof first>> | undefined;
+    const knexClient = db.connection().getWriteClient().client;
+    let onQuery: ((query: { sql: string; bindings?: unknown[] }) => void) | undefined;
+    let watchdog: ReturnType<typeof setTimeout> | undefined;
+    try {
+      await firstLocked;
+      const secondRequestedLock = new Promise<void>((resolve, reject) => {
+        onQuery = (query) => {
+          if (/for update/i.test(query.sql) && query.bindings?.includes(itemId)) resolve();
+        };
+        knexClient.on('query', onQuery);
+        watchdog = setTimeout(() => reject(new Error('Second PATCH did not request a lock')), 5000);
+      });
+      second = client
+        .patch(url)
+        .bearerToken(token)
+        .header('If-Match', '"1"')
+        .json({ name: 'Second update', photos: [{ url: '/second.jpg' }] })
+        .then((response) => response);
+      await secondRequestedLock;
+      release();
+      const [winner, loser] = await Promise.all([first, second]);
+      winner.assertStatus(200);
+      loser.assertStatus(412);
+      assert.equal(winner.body().version, 2);
+      assert.deepEqual((await client.get(url).bearerToken(token)).body(), winner.body());
+    } finally {
+      if (onQuery) knexClient.off('query', onQuery);
+      if (watchdog) clearTimeout(watchdog);
+      release();
+      await Promise.allSettled([first, ...(second ? [second] : [])]);
+      saveMock.mock.restore();
+    }
+  });
+
+  test('reads version and related data from the same snapshot', async ({ assert }) => {
+    const { itemId } = await setupStock();
+    const service = new AdminStockService();
+    const before = await service.fetchSingleStockItem(itemId);
+    let release!: () => void;
+    let reachedRelations!: () => void;
+    const waiting = new Promise<void>((resolve) => (reachedRelations = resolve));
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    const originalLoad = Stock.prototype.load;
+    let paused = false;
+    const loadMock = mock.method(
+      Stock.prototype,
+      'load',
+      async function (this: Stock, ...args: Parameters<typeof originalLoad>) {
+        if (this.itemId === itemId && !paused) {
+          paused = true;
+          reachedRelations();
+          await gate;
+        }
+        return originalLoad.apply(this, args);
+      }
+    );
+    const read = service.fetchSingleStockItem(itemId);
+    try {
+      await waiting;
+      const after = await service.updateSingleItemStock(
+        itemId,
+        {
+          photos: [{ url: '/new-snapshot.jpg' }],
+          prices: [{ ...newItemWithoutItemId.prices[0], price: 99.99 }],
+        },
+        before.version
+      );
+      release();
+      const snapshot = await read;
+      assert.equal(after.version, before.version + 1);
+      assert.equal(snapshot.version, before.version);
+      assert.deepEqual(
+        snapshot.photos.map(({ url, name }) => ({ url, name })),
+        before.photos.map(({ url, name }) => ({ url, name }))
+      );
+      assert.deepEqual(snapshot.prices, before.prices);
+    } finally {
+      release();
+      await Promise.allSettled([read]);
+      loadMock.mock.restore();
+    }
   });
 
   for (const firstOperation of ['patch', 'delete'] as const) {
@@ -227,7 +438,11 @@ test.group('Admin stock management', () => {
       });
 
       const update = () =>
-        service.updateSingleItemStock(itemId, { name: 'Concurrent update', photos, prices });
+        service.updateSingleItemStock(
+          itemId,
+          { name: 'Concurrent update', photos, prices },
+          before.version
+        );
       const remove = () => service.deleteSingleItemStock(itemId);
       const first = firstOperation === 'patch' ? update() : remove();
       const knexClient = db.connection().getWriteClient().client;
